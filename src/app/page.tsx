@@ -6,6 +6,7 @@ import { HeroSection } from '@/components/layout/HeroSection'
 import { RecentBusinesses } from '@/components/layout/RecentBusinesses'
 import { ActiveCoupons } from '@/components/layout/ActiveCoupons'
 import { FeaturedSection } from '@/components/layout/FeaturedSection'
+import { MariCarreiraSection } from '@/components/layout/MariCarreiraSection' // <-- IMPORTADO
 import { Button } from '@/components/ui/Button'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/Card'
 import { Spinner, Skeleton, LoadingCard } from '@/components/ui/Loading'
@@ -61,6 +62,7 @@ export default function TestPage() {
         <RecentBusinesses />
         <ActiveCoupons />
         <FeaturedSection />
+        <MariCarreiraSection />
         {/* -- FIM DAS SEÇÕES DA HOME PAGE -- */}
 
         <div className="container mx-auto px-4 py-8">

@@ -7,7 +7,7 @@ import { AnimatedCounter } from '@/components/ui/AnimatedCounter'
 export function MariCarreiraSection() {
   return (
     <section 
-      className="w-full overflow-hidden relative bg-gradient-to-br from-rosa/5 to-transparent py-12 md:py-16" // <-- PADDING AJUSTADO
+      className="w-full overflow-hidden relative bg-gradient-to-br from-rosa/5 to-transparent py-12 md:py-16"
       aria-labelledby="mari-title"
     >
       <div 
@@ -18,7 +18,6 @@ export function MariCarreiraSection() {
       <div className="container relative z-10 mx-auto max-w-7xl px-4">
         <div className="grid grid-cols-1 items-center gap-12 md:grid-cols-2 md:gap-16">
           
-          {/* Conteúdo - Lado Esquerdo */}
           <div className="flex flex-col gap-8">
             <div>
               <h2 id="mari-title" className="text-4xl font-extrabold tracking-tighter text-rosa md:text-5xl">
@@ -27,7 +26,6 @@ export function MariCarreiraSection() {
               <p className="mt-2 text-lg font-medium text-text-secondary">@JARDIMMARAJOARASP</p>
             </div>
 
-            {/* Cards de estatísticas */}
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
               <Card className="p-4 text-center"><div className="text-3xl font-bold text-rosa">+<AnimatedCounter value={20000} /></div><p className="text-xs font-semibold uppercase tracking-wider text-text-secondary">Seguidores</p></Card>
               <Card className="p-4 text-center"><div className="text-3xl font-bold text-rosa"><AnimatedCounter value={200} /></div><p className="text-xs font-semibold uppercase tracking-wider text-text-secondary">Parceiros Divulgados</p></Card>
@@ -36,7 +34,6 @@ export function MariCarreiraSection() {
 
             <div className="space-y-4 text-base leading-relaxed text-text-secondary">
               <p>Mari Carreira é a influenciadora digital que conecta o Jardim Marajoara com os melhores negócios locais...</p>
-              <p>Seu perfil é uma vitrine para pequenos e médios empresários...</p>
             </div>
 
             <div className="pt-4">
@@ -44,9 +41,8 @@ export function MariCarreiraSection() {
             </div>
           </div>
 
-          {/* Visual - Lado Direito - ORDEM CORRIGIDA */}
-          <div className="relative flex items-center justify-center order-first md:order-last">
-            <div className="relative mx-auto w-full max-w-[300px] md:mx-0 md:max-w-full">
+          <div className="relative flex items-center justify-center">
+            <div className="relative mx-auto w-full max-w-[280px] sm:max-w-[300px] md:mx-0 md:max-w-full">
               <div className="relative transform rotate-3 rounded-[40px] bg-white p-3 shadow-2xl">
                 <div className="aspect-[9/16] overflow-hidden rounded-[32px] bg-gray-100">
                   <div className="flex h-full w-full items-center justify-center bg-gradient-to-b from-rosa/10 to-rosa/20">

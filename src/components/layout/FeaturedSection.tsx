@@ -8,9 +8,9 @@ import { Card } from '@/components/ui/Card'
 import { cn } from '@/lib/utils'
 
 const featuredBusinesses = [
-  { id: 1, name: 'Casa Bauducco', category: 'Padaria & Confeitaria', logo: 'CB', coupon: '15% OFF', imagePlaceholder: '🥖' },
-  { id: 2, name: 'Pizzaria Bella Italia', category: 'Restaurante Italiano', logo: 'BI', coupon: '20% OFF', imagePlaceholder: '🍕' },
-  { id: 3, name: 'Pet Shop Amigo Fiel', category: 'Pet Shop & Veterinário', logo: 'AF', coupon: 'Banho Grátis', imagePlaceholder: '🐾' },
+    { id: 1, name: 'Casa Bauducco', category: 'Padaria & Confeitaria', logo: 'CB', coupon: '15% OFF', imagePlaceholder: '🥖' },
+    { id: 2, name: 'Pizzaria Bella Italia', category: 'Restaurante Italiano', logo: 'BI', coupon: '20% OFF', imagePlaceholder: '🍕' },
+    { id: 3, name: 'Pet Shop Amigo Fiel', category: 'Pet Shop & Veterinário', logo: 'AF', coupon: 'Banho Grátis', imagePlaceholder: '🐾' },
 ]
 
 export function FeaturedSection() {
@@ -18,7 +18,8 @@ export function FeaturedSection() {
   const toggleInfoPanel = (id: number) => { setInfoPanelOpen(prev => (prev === id ? null : id)) }
   
   return (
-    <section className="py-12 md:py-16">
+    <section className="py-12 md:py-16"> 
+      {/* 3. ESPAÇAMENTO CORRIGIDO */}
       <div className="container mx-auto px-4">
         <div className="mb-12 text-center">
           <h2 className="text-3xl font-bold tracking-tighter text-text-primary md:text-4xl">Destaques da Semana</h2>

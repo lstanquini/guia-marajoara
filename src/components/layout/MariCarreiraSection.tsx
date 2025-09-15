@@ -7,7 +7,7 @@ import { AnimatedCounter } from '@/components/ui/AnimatedCounter'
 export function MariCarreiraSection() {
   return (
     <section 
-      className="w-full overflow-hidden relative bg-gradient-to-br from-rosa/5 to-transparent py-12 md:py-16"
+      className="w-full overflow-hidden relative bg-gradient-to-br from-rosa/5 to-transparent py-12 md:py-16" // <-- 2. ESPAÇAMENTO CORRIGIDO
       aria-labelledby="mari-title"
     >
       <div 
@@ -18,7 +18,8 @@ export function MariCarreiraSection() {
       <div className="container relative z-10 mx-auto max-w-7xl px-4">
         <div className="grid grid-cols-1 items-center gap-12 md:grid-cols-2 md:gap-16">
           
-          <div className="flex flex-col gap-8">
+          {/* 1. ORDEM CORRIGIDA: Adicionadas classes 'order-2 md:order-1' */}
+          <div className="order-2 flex flex-col gap-8 md:order-1">
             <div>
               <h2 id="mari-title" className="text-4xl font-extrabold tracking-tighter text-rosa md:text-5xl">
                 MARI CARREIRA
@@ -41,7 +42,8 @@ export function MariCarreiraSection() {
             </div>
           </div>
 
-          <div className="relative flex items-center justify-center">
+          {/* 1. ORDEM CORRIGIDA: Adicionadas classes 'order-1 md:order-2' */}
+          <div className="order-1 relative flex items-center justify-center md:order-2">
             <div className="relative mx-auto w-full max-w-[280px] sm:max-w-[300px] md:mx-0 md:max-w-full">
               <div className="relative transform rotate-3 rounded-[40px] bg-white p-3 shadow-2xl">
                 <div className="aspect-[9/16] overflow-hidden rounded-[32px] bg-gray-100">

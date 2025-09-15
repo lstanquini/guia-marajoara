@@ -1,11 +1,20 @@
 'use client'
 
 import { Card } from '@/components/ui/Card'
-import { Badge } from '@/components/ui/Badge'
+import { Badge, BadgeVariant } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 
-// Mock data, será substituído por dados da API na FASE 3
-const recentBusinesses = [
+interface Business {
+  name: string;
+  category: string;
+  logo: string;
+  status: { text: string; variant: BadgeVariant };
+  rating: string;
+  address: string;
+  coupons: number;
+}
+
+const recentBusinesses: Business[] = [
   {
     name: 'Burger King Marajoara',
     category: 'Fast Food • Hamburgueria',
@@ -63,7 +72,7 @@ export function RecentBusinesses() {
               <div>
                 <div className="mb-2 flex flex-wrap items-center gap-x-4 gap-y-2">
                   <h3 className="text-xl font-semibold">{business.name}</h3>
-                  <Badge variant={business.status.variant as any}>
+                  <Badge variant={business.status.variant}>
                     {business.status.text}
                   </Badge>
                 </div>

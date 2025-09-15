@@ -18,12 +18,11 @@ export function FeaturedSection() {
   const toggleInfoPanel = (id: number) => { setInfoPanelOpen(prev => (prev === id ? null : id)) }
   
   return (
-    <section className="py-12 md:py-16"> 
-      {/* 3. ESPAÇAMENTO CORRIGIDO */}
+    <section className="py-12 md:py-8"> {/* Reduzido padding no desktop de 16 para 8 */}
       <div className="container mx-auto px-4">
-        <div className="mb-12 text-center">
+        <div className="mb-12 md:mb-8 text-center"> {/* Reduzido margin bottom no desktop */}
           <h2 className="text-3xl font-bold tracking-tighter text-text-primary md:text-4xl">Destaques da Semana</h2>
-          <p className="mt-4 text-lg text-text-secondary">Os parceiros mais procurados do Guia Marajoara.</p>
+          <p className="mt-4 md:mt-2 text-lg text-text-secondary">Os parceiros mais procurados do Guia Marajoara.</p> {/* Reduzido margin top no desktop */}
         </div>
         <Carousel>
           {featuredBusinesses.map(business => (

@@ -3,7 +3,8 @@
 import { useState } from 'react'
 import { Navbar } from '@/components/layout/Navbar'
 import { HeroSection } from '@/components/layout/HeroSection'
-import { RecentBusinesses } from '@/components/layout/RecentBusinesses' // <-- ADICIONADO
+import { RecentBusinesses } from '@/components/layout/RecentBusinesses'
+import { ActiveCoupons } from '@/components/layout/ActiveCoupons' // <-- IMPORTADO
 import { Button } from '@/components/ui/Button'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/Card'
 import { Spinner, Skeleton, LoadingCard } from '@/components/ui/Loading'
@@ -57,6 +58,7 @@ export default function TestPage() {
         {/* -- SEÇÕES DA HOME PAGE -- */}
         <HeroSection />
         <RecentBusinesses />
+        <ActiveCoupons />
         {/* -- FIM DAS SEÇÕES DA HOME PAGE -- */}
 
         <div className="container mx-auto px-4 py-8">

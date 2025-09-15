@@ -28,13 +28,31 @@
 | P002 | Componentes funcionais | `export default function Component()` | Todos componentes |
 | P003 | Types explícitos | `interface Props { name: string }` | Todo código |
 | P004 | Soft delete | `deleted_at timestamp` | Todas tabelas |
+| P005 | Validação obrigatória | Gerente valida 1 por 1 todas entregas | Todas tarefas |
+| P006 | Checklist numerado | Especialista segue lista exata | Todas implementações |
+| P007 | 14/09/2025 17:00 | Design obrigatório antes de código | Evitar retrabalho e erros de UI | Todo desenvolvimento visual | Product Owner + GP |
+| P008 | 14/09/2025 17:00 | Gates de Qualidade em 3 fases | Garantir qualidade em cada etapa | Todo o processo | Product Owner + GP |
+| P009 | 14/09/2025 17:00 | Workflow multifuncional | Reduzir erros com validação cruzada | Toda a equipe | Product Owner + GP |
+| P010 | 14/09/2025 17:35 | Verde ajustado para #7CB342 | Conformidade WCAG AA (contraste 3.02:1) | Todos os componentes | Accessibility Specialist |
 
 ## 🔒 CORES E DESIGN SYSTEM
 | Elemento | Nome | Hex | Nunca Mudar |
 |----------|------|-----|-------------|
 | Cor Primária | Rosa FMAD | #C2227A | ✅ |
-| Cor Secundária | Verde Cupom | #8BC34A | ✅ |
+| Cor Secundária | Verde Cupom | #7CB342 | ✅ |
 | Cor Terciária | Ciano Destaque | #00BCD4 | ✅ |
 | Background | Cinza Claro | #F8F9FA | ✅ |
 | Texto Principal | Preto Suave | #1A1A1A | ✅ |
 | Texto Secundário | Cinza | #6B7280 | ✅ |
+
+## 🔒 VERSÕES CONGELADAS
+| Componente | Versão | Hash | Razão do Freeze |
+|------------|---------|------|------------------|
+| Button.tsx | v1.0.0 | btn-001 | Aprovado com todos variants |
+| Card.tsx | v1.0.0 | crd-001 | Aprovado com 3 tipos |
+| Loading.tsx | v1.0.0 | lod-001 | Aprovado com spinner e skeleton |
+| Modal.tsx | v1.0.0 | mdl-001 | Aprovado responsivo |
+| SearchBar.tsx | v1.0.1 | srch-002 | Corrigido bug X duplicado |
+| Toast.tsx | v1.0.0 | tst-001 | Aprovado com 3 variants |
+| Navbar.tsx | v1.0.1 | nav-002 | Corrigido sticky e z-index |
+| globals.css | v1.0.0 | css-001 | Estilos base definidos |

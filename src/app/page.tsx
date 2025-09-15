@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { Navbar } from '@/components/layout/Navbar'
+import { HeroSection } from '@/components/layout/HeroSection' // <-- IMPORTADO
 import { Button } from '@/components/ui/Button'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/Card'
 import { Spinner, Skeleton, LoadingCard } from '@/components/ui/Loading'
@@ -51,24 +52,13 @@ export default function TestPage() {
       <Navbar />
       
       <main role="main" id="main" className="min-h-screen bg-[#F8F9FA]">
+        
+        {/* -- INÍCIO DA SEÇÃO INTEGRADA -- */}
+        <HeroSection />
+        {/* -- FIM DA SEÇÃO INTEGRADA -- */}
+
         <div className="container mx-auto px-4 py-8">
-          {/* Hero Section */}
-          <section className="text-center py-12 mb-12">
-            <h1 className="text-4xl md:text-5xl font-bold mb-4">
-              <span className="text-[#C2227A]">GUIA</span>
-              <span className="text-[#1A1A1A] text-2xl md:text-3xl mx-2">DO</span>
-              <span className="text-[#7CB342]">Marajoara</span>
-            </h1>
-            <p className="text-[#6B7280] mb-8">Testando todos os componentes com novo processo Design-First</p>
-            
-            <div className="max-w-2xl mx-auto">
-              <SearchBar 
-                value={searchValue}
-                onChange={(e) => setSearchValue(e.target.value)}
-                onSearch={handleSearch}
-              />
-            </div>
-          </section>
+          {/* SEÇÕES DE TESTE DOS COMPONENTES BASE - MANTIDAS INTOCADAS */}
 
           {/* Buttons Section */}
           <section className="mb-12">

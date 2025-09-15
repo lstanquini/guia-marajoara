@@ -4,7 +4,8 @@ import { useState } from 'react'
 import { Navbar } from '@/components/layout/Navbar'
 import { HeroSection } from '@/components/layout/HeroSection'
 import { RecentBusinesses } from '@/components/layout/RecentBusinesses'
-import { ActiveCoupons } from '@/components/layout/ActiveCoupons' // <-- IMPORTADO
+import { ActiveCoupons } from '@/components/layout/ActiveCoupons'
+import { FeaturedSection } from '@/components/layout/FeaturedSection'
 import { Button } from '@/components/ui/Button'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/Card'
 import { Spinner, Skeleton, LoadingCard } from '@/components/ui/Loading'
@@ -59,6 +60,7 @@ export default function TestPage() {
         <HeroSection />
         <RecentBusinesses />
         <ActiveCoupons />
+        <FeaturedSection />
         {/* -- FIM DAS SEÇÕES DA HOME PAGE -- */}
 
         <div className="container mx-auto px-4 py-8">
@@ -84,6 +86,16 @@ export default function TestPage() {
               <Button loading>Loading</Button>
               <Button disabled>Disabled</Button>
             </div>
+
+            <div className="mt-6">
+              <h3 className="text-lg font-semibold mb-3">Tamanhos</h3>
+              <div className="flex flex-wrap gap-4">
+                <Button size="sm">Small</Button>
+                <Button size="md">Medium</Button>
+                <Button size="lg">Large</Button>
+                <Button size="full">Full Width</Button>
+              </div>
+            </div>
           </section>
 
           {/* Cards Section */}
@@ -95,36 +107,166 @@ export default function TestPage() {
                   <CardTitle>Card Padrão</CardTitle>
                   <CardDescription>Descrição do card</CardDescription>
                 </CardHeader>
+                <CardContent>
+                  <p className="text-[#6B7280]">
+                    Conteúdo do card com informações relevantes para o usuário.
+                  </p>
+                </CardContent>
+                <CardFooter>
+                  <Button size="sm" variant="secondary">Ação</Button>
+                </CardFooter>
               </Card>
+
               <Card variant="business">
                 <CardHeader>
+                  <div className="text-3xl mb-2">🍕</div>
                   <CardTitle>Pizzaria Bella Italia</CardTitle>
+                  <CardDescription>Restaurante • Pizza • Italiana</CardDescription>
                 </CardHeader>
+                <CardContent>
+                  <div className="flex items-center gap-1 text-yellow-400">
+                    <span>★★★★☆</span>
+                    <span className="text-sm text-[#6B7280] ml-2">4.2 (127 avaliações)</span>
+                  </div>
+                  <p className="text-sm text-[#6B7280] mt-2">
+                    Av. do Cursino, 234 - Jardim Marajoara
+                  </p>
+                </CardContent>
+                <CardFooter>
+                  <Button size="sm" variant="whatsapp">WhatsApp</Button>
+                </CardFooter>
               </Card>
+
               <Card variant="coupon">
                 <CardHeader>
+                  <div className="text-3xl font-bold text-[#7CB342]">20% OFF</div>
                   <CardTitle>Desconto Especial</CardTitle>
+                  <CardDescription>Válido até 31/12/2025</CardDescription>
                 </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-[#6B7280]">
+                    Use o código: <span className="font-mono font-bold text-[#C2227A]">PROMO20</span>
+                  </p>
+                  <p className="text-xs text-[#6B7280] mt-2">
+                    *Válido para compras acima de R$ 50
+                  </p>
+                </CardContent>
+                <CardFooter>
+                  <Button size="sm" variant="secondary">Resgatar Cupom</Button>
+                </CardFooter>
               </Card>
             </div>
           </section>
-          
-          {/* Loading States Section */}
+
+          {/* Loading States */}
           <section className="mb-12">
             <h2 className="text-2xl font-bold text-[#1A1A1A] mb-6">Loading States</h2>
-            <LoadingCard />
+            
+            <div className="mb-8">
+              <h3 className="text-lg font-semibold mb-4">Spinners</h3>
+              <div className="flex gap-8 items-center">
+                <div className="text-center">
+                  <Spinner size="sm" />
+                  <p className="text-sm text-[#6B7280] mt-2">Small</p>
+                </div>
+                <div className="text-center">
+                  <Spinner size="md" />
+                  <p className="text-sm text-[#6B7280] mt-2">Medium</p>
+                </div>
+                <div className="text-center">
+                  <Spinner size="lg" />
+                  <p className="text-sm text-[#6B7280] mt-2">Large</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="mb-8">
+              <h3 className="text-lg font-semibold mb-4">Skeletons</h3>
+              <div className="bg-white p-6 rounded-2xl shadow-sm max-w-md">
+                <Skeleton variant="title" className="mb-4" />
+                <Skeleton variant="text" className="mb-2" />
+                <Skeleton variant="text" className="mb-2" />
+                <Skeleton variant="text" className="w-4/5" />
+              </div>
+            </div>
+
+            <div>
+              <h3 className="text-lg font-semibold mb-4">Loading Card</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <LoadingCard />
+                <LoadingCard />
+                <LoadingCard />
+              </div>
+            </div>
           </section>
 
-          {/* Modal & Toast Section */}
+          {/* Modal Section */}
           <section className="mb-12">
-            <h2 className="text-2xl font-bold text-[#1A1A1A] mb-6">Modal e Toasts</h2>
-            <div className="flex flex-wrap gap-4">
-              <Button onClick={() => setModalOpen(true)}>Abrir Modal</Button>
-              <Button variant="secondary" onClick={showSuccessToast}>Toast Success</Button>
-            </div>
-            <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} title="Modal de Teste">
-              <p>Conteúdo do modal.</p>
+            <h2 className="text-2xl font-bold text-[#1A1A1A] mb-6">Modal</h2>
+            <Button onClick={() => setModalOpen(true)}>Abrir Modal</Button>
+
+            <Modal
+              isOpen={modalOpen}
+              onClose={() => setModalOpen(false)}
+              title="Título do Modal"
+              description="Esta é a descrição do modal com informações importantes."
+              actions={
+                <>
+                  <Button variant="ghost" onClick={() => setModalOpen(false)}>
+                    Cancelar
+                  </Button>
+                  <Button variant="primary" onClick={() => {
+                    setModalOpen(false)
+                    showSuccessToast()
+                  }}>
+                    Confirmar
+                  </Button>
+                </>
+              }
+            >
+              <div className="space-y-4">
+                <p className="text-[#6B7280]">
+                  Este é o conteúdo do modal. Aqui você pode adicionar formulários, 
+                  informações detalhadas ou qualquer outro conteúdo necessário.
+                </p>
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <p className="text-sm text-[#6B7280]">
+                    💡 Dica: O modal é responsivo - fullscreen no mobile e centralizado no desktop.
+                  </p>
+                </div>
+              </div>
             </Modal>
+          </section>
+
+          {/* Toast Section */}
+          <section className="mb-12">
+            <h2 className="text-2xl font-bold text-[#1A1A1A] mb-6">Toasts / Notificações</h2>
+            <div className="flex flex-wrap gap-4">
+              <Button variant="secondary" onClick={showSuccessToast}>
+                Toast Success
+              </Button>
+              <Button variant="outline" onClick={showErrorToast}>
+                Toast Error
+              </Button>
+              <Button variant="ghost" onClick={showWarningToast}>
+                Toast Warning
+              </Button>
+            </div>
+          </section>
+
+          {/* Accessibility Info */}
+          <section className="mb-12 bg-white p-8 rounded-2xl shadow-sm">
+            <h2 className="text-2xl font-bold text-[#1A1A1A] mb-6">✅ Acessibilidade Implementada</h2>
+            <ul className="space-y-2 text-[#6B7280]">
+              <li>✓ Skip link para navegação por teclado</li>
+              <li>✓ ARIA labels em todos os elementos interativos</li>
+              <li>✓ Focus trap no modal e drawer mobile</li>
+              <li>✓ Contraste WCAG AA (verde ajustado para #7CB342)</li>
+              <li>✓ Touch targets mínimos de 44x44px no mobile</li>
+              <li>✓ Screen reader support com .sr-only</li>
+              <li>✓ Reduced motion support</li>
+              <li>✓ Navegação completa por teclado</li>
+            </ul>
           </section>
         </div>
       </main>

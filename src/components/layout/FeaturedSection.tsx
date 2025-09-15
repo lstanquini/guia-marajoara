@@ -7,7 +7,6 @@ import { Badge } from '@/components/ui/Badge'
 import { Card } from '@/components/ui/Card'
 import { cn } from '@/lib/utils'
 
-// Mock Data
 const featuredBusinesses = [
   { id: 1, name: 'Casa Bauducco', category: 'Padaria & Confeitaria', logo: 'CB', coupon: '15% OFF', imagePlaceholder: '🥖' },
   { id: 2, name: 'Pizzaria Bella Italia', category: 'Restaurante Italiano', logo: 'BI', coupon: '20% OFF', imagePlaceholder: '🍕' },
@@ -22,7 +21,8 @@ export function FeaturedSection() {
   }
   
   return (
-    <section className="py-16 md:py-24">
+    <section className="py-12 md:py-16"> 
+      {/* ^-- PADDING AJUSTADO */}
       <div className="container mx-auto px-4">
         <div className="mb-12 text-center">
           <h2 className="text-3xl font-bold tracking-tighter text-text-primary md:text-4xl">
@@ -41,9 +41,7 @@ export function FeaturedSection() {
               </div>
 
               {/* Badges */}
-              <div className="absolute top-4 right-4">
-                <Badge variant="success">{business.coupon}</Badge>
-              </div>
+              <div className="absolute top-4 right-4"><Badge variant="success">{business.coupon}</Badge></div>
 
               {/* Info Button */}
               <Button 
@@ -59,9 +57,7 @@ export function FeaturedSection() {
 
               {/* Company Info */}
               <div className="absolute bottom-4 left-4 flex items-center gap-3 rounded-lg bg-white/80 p-3 pr-4 backdrop-blur-sm">
-                <div className="flex h-10 w-10 items-center justify-center rounded-md bg-rosa font-bold text-white">
-                  {business.logo}
-                </div>
+                <div className="flex h-10 w-10 items-center justify-center rounded-md bg-rosa font-bold text-white">{business.logo}</div>
                 <div>
                   <h3 className="font-semibold">{business.name}</h3>
                   <p className="text-xs text-text-secondary">{business.category}</p>

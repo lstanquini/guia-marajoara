@@ -2,12 +2,12 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation' // <-- ADICIONADO
 import { cn } from '@/lib/utils'
 import { SearchBar } from '@/components/ui/SearchBar'
 import { Card } from '@/components/ui/Card'
-import { AnimatedCounter } from '@/components/ui/AnimatedCounter' // Novo componente
+import { AnimatedCounter } from '@/components/ui/AnimatedCounter'
 
-// TODO: Substituir placeholders por ícones SVG personalizados
 const categories = [
   { name: 'Restaurantes', icon: '🍴', count: 28 },
   { name: 'Beleza', icon: '💅', count: 22 },
@@ -27,10 +27,17 @@ const counters = [
 
 export function HeroSection() {
   const [searchValue, setSearchValue] = useState('')
+  const router = useRouter() // <-- ADICIONADO
+
+  // FUNÇÃO ADICIONADA PARA CONECTAR A BUSCA
+  const handleSearch = (query: string) => {
+    if (query.trim()) {
+      router.push(`/busca?q=${encodeURIComponent(query.trim())}`)
+    }
+  }
 
   return (
     <section className="relative w-full overflow-hidden py-8 md:py-16">
-      {/* ... (código do background e logo) ... */}
        <div className="container relative z-10 mx-auto px-4">
         {/* Logo */}
         <div className="mb-12 text-center">
@@ -41,10 +48,15 @@ export function HeroSection() {
           </h1>
         </div>
 
-        {/* Search */}
+        {/* Search - Prop 'onSearch' adicionada */}
         <div className="mb-12">
           <div className="mx-auto max-w-2xl">
-            <SearchBar value={searchValue} onChange={(e) => setSearchValue(e.target.value)} />
+            <SearchBar 
+              value={searchValue} 
+              onChange={(e) => setSearchValue(e.target.value)}
+              onSearch={handleSearch}
+              placeholder="O que você procura no bairro?"
+            />
           </div>
         </div>
 

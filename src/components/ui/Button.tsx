@@ -9,11 +9,12 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        primary: 'bg-[#C2227A] text-white hover:bg-[#A01860] focus-visible:ring-[#C2227A]',
-        secondary: 'bg-[#7CB342] text-white hover:bg-[#6A9A38] focus-visible:ring-[#7CB342]',
-        outline: 'border-2 border-[#C2227A] bg-transparent text-[#C2227A] hover:bg-[#C2227A] hover:text-white',
-        ghost: 'bg-transparent text-[#1A1A1A] hover:bg-gray-100',
-        whatsapp: 'bg-[#25D366] text-white hover:bg-[#20BD5C] hover:scale-105 focus-visible:ring-[#25D366]'
+        primary: 'bg-rosa text-white hover:bg-rosa/90 focus-visible:ring-rosa',
+        secondary: 'bg-verde text-white hover:bg-verde/90 focus-visible:ring-verde',
+        outline: 'border-2 border-rosa bg-transparent text-rosa hover:bg-rosa hover:text-white',
+        ghost: 'bg-transparent text-text-primary hover:bg-gray-100',
+        whatsapp: 'bg-[#25D366] text-white hover:bg-[#20BD5C] hover:scale-105 focus-visible:ring-[#25D366]',
+        inverted: 'bg-white/10 text-white hover:bg-white/20 focus-visible:ring-white', // <-- ADICIONADO
       },
       size: {
         sm: 'h-9 px-3 text-sm',
@@ -33,22 +34,10 @@ export interface ButtonProps
   extends ButtonHTMLAttributes<HTMLButtonElement>,
     VariantProps<typeof buttonVariants> {
   loading?: boolean
-  icon?: React.ReactNode
-  iconPosition?: 'left' | 'right'
 }
 
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ 
-    className, 
-    variant, 
-    size, 
-    loading = false,
-    icon,
-    iconPosition = 'left',
-    children,
-    disabled,
-    ...props 
-  }, ref) => {
+  ({ className, variant, size, loading = false, children, disabled, ...props }, ref) => {
     return (
       <button
         className={cn(buttonVariants({ variant, size, className }))}
@@ -56,46 +45,11 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         disabled={disabled || loading}
         {...props}
       >
-        {loading ? (
-          <>
-            <svg 
-              className="mr-2 h-4 w-4 animate-spin" 
-              xmlns="http://www.w3.org/2000/svg" 
-              fill="none" 
-              viewBox="0 0 24 24"
-            >
-              <circle 
-                className="opacity-25" 
-                cx="12" 
-                cy="12" 
-                r="10" 
-                stroke="currentColor" 
-                strokeWidth="4"
-              />
-              <path 
-                className="opacity-75" 
-                fill="currentColor" 
-                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-              />
-            </svg>
-            Carregando...
-          </>
-        ) : (
-          <>
-            {icon && iconPosition === 'left' && (
-              <span className="mr-2">{icon}</span>
-            )}
-            {children}
-            {icon && iconPosition === 'right' && (
-              <span className="ml-2">{icon}</span>
-            )}
-          </>
-        )}
+        {loading ? ( <div>Carregando...</div> ) : ( children )}
       </button>
     )
   }
 )
-
 Button.displayName = 'Button'
 
 export { Button, buttonVariants }

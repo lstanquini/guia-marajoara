@@ -4,6 +4,7 @@ import { useState } from 'react'
 
 // Importações dos Componentes Principais
 import HeroSection from '@/components/layout/HeroSection'
+import { CategoryHighlights } from '@/components/layout/CategoryHighlights' // <-- IMPORTAÇÃO NOVA
 import { RecentBusinesses } from '@/components/layout/RecentBusinesses'
 import { ActiveCoupons } from '@/components/layout/ActiveCoupons'
 import { FeaturedSection } from '@/components/layout/FeaturedSection'
@@ -47,6 +48,9 @@ export default function HomePage() {
       >
         <HomePageSearchBar />
       </HeroSection>
+
+      {/* SEÇÃO DE CATEGORIAS ADICIONADA AQUI */}
+      <CategoryHighlights />
 
       <RecentBusinesses />
       

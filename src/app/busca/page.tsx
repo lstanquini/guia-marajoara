@@ -1,5 +1,6 @@
 import { Suspense } from 'react'
-import BuscaClient from './BuscaClient'
+// AQUI ESTÁ A CORREÇÃO: Importando o componente correto
+import BuscaClient from './BuscaClient' 
 import { LoadingCard } from '@/components/ui/Loading'
 
 // Componente de fallback para o Suspense

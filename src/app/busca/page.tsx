@@ -1,86 +1,182 @@
 'use client'
 
-import { useState, Suspense } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { Card } from '@/components/ui/Card'
-import { Button } from '@/components/ui/Button'
+import { searchBusinesses } from '@/lib/mock-data'
 import { SearchBar } from '@/components/ui/SearchBar'
-
-const mockBusinesses = [
-  { id: 1, name: 'Pizzaria Bella Italia', category: 'Restaurante', logo: '🍕' },
-  { id: 2, name: 'Studio Beauty Nails', category: 'Beleza', logo: '💅' },
-  { id: 3, name: 'Pet Shop Amigo Fiel', category: 'Pet Shop', logo: '🐾' },
-  { id: 4, name: 'Burger King Marajoara', category: 'Restaurante', logo: '🍔' },
-  { id: 5, name: 'Clínica Saúde & Vida', category: 'Saúde', logo: '🏥' },
-]
-
-function SearchController() {
-  const searchParams = useSearchParams()
-  const initialQuery = searchParams.get('q') || ''
-  const [query, setQuery] = useState(initialQuery)
-  const [filteredBusinesses, setFilteredBusinesses] = useState(mockBusinesses)
-
-  const handleFilter = () => {
-    setFilteredBusinesses(mockBusinesses.slice(0, 3));
-  }
-  
-  const handleResetFilter = () => {
-    setFilteredBusinesses(mockBusinesses);
-  }
-
-  return (
-    <>
-      <div className="mb-8">
-        <SearchBar value={query} onChange={(e) => setQuery(e.target.value)} />
-      </div>
-
-      <div className="sr-only" aria-live="polite" role="status">
-        {filteredBusinesses.length} resultados encontrados.
-      </div>
-
-      <div className="grid grid-cols-1 gap-8 md:grid-cols-4">
-        {/* Filtros */}
-        <aside className="hidden md:block md:col-span-1">
-          <div className="sticky top-24 rounded-lg border bg-white p-6 shadow-sm">
-            <h3 className="mb-4 text-lg font-semibold">Filtros</h3>
-            <div className="space-y-4">
-              <div>
-                <label className="text-sm font-medium">Categoria</label>
-                <select className="mt-1 block w-full rounded-md border-gray-300 shadow-sm" onChange={handleFilter}>
-                  <option onClick={handleResetFilter}>Todas</option>
-                  <option>Restaurantes</option>
-                </select>
-              </div>
-            </div>
-          </div>
-        </aside>
-
-        {/* Resultados */}
-        <main className="md:col-span-3">
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {filteredBusinesses.map((business) => (
-              <Card key={business.id} variant="business">
-                <div className="text-3xl">{business.logo}</div>
-                <h3 className="mt-2 font-semibold">{business.name}</h3>
-                <p className="text-sm text-text-secondary">{business.category}</p>
-              </Card>
-            ))}
-          </div>
-        </main>
-      </div>
-    </>
-  )
-}
+import { BusinessCard } from '@/components/BusinessCard'
+import { Skeleton } from '@/components/ui/Loading'
 
 export default function SearchPage() {
+  const searchParams = useSearchParams()
+  const [businesses, setBusinesses] = useState<any[]>([])
+  const [loading, setLoading] = useState(false)
+  const [page, setPage] = useState(1)
+  const [hasMore, setHasMore] = useState(true)
+  const [query, setQuery] = useState(searchParams.get('q') || '')
+  const observerTarget = useRef<HTMLDivElement>(null)
+
+  // Carregar dados iniciais
+  const loadBusinesses = useCallback(async (reset = false) => {
+    if (loading) return
+    
+    setLoading(true)
+    const currentPage = reset ? 1 : page
+    
+    const result = await searchBusinesses(query, currentPage, 12)
+    
+    if (reset) {
+      setBusinesses(result.businesses)
+      setPage(2)
+    } else {
+      setBusinesses(prev => [...prev, ...result.businesses])
+      setPage(prev => prev + 1)
+    }
+    
+    setHasMore(result.hasMore)
+    setLoading(false)
+  }, [query, page, loading])
+
+  // Infinite scroll observer
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      entries => {
+        if (entries[0].isIntersecting && hasMore && !loading) {
+          loadBusinesses()
+        }
+      },
+      { threshold: 0.1, rootMargin: '100px' }
+    )
+
+    if (observerTarget.current) {
+      observer.observe(observerTarget.current)
+    }
+
+    return () => observer.disconnect()
+  }, [hasMore, loading, loadBusinesses])
+
+  // Busca inicial e quando query muda
+  useEffect(() => {
+    setBusinesses([])
+    setPage(1)
+    loadBusinesses(true)
+  }, [query])
+
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="mb-8 text-center">
-        <h1 className="text-4xl font-bold">Encontre no Bairro</h1>
+    <div className="min-h-screen bg-background">
+      {/* Header com busca */}
+      <div className="sticky top-0 z-40 bg-white shadow-sm">
+        <div className="container mx-auto px-4 py-4">
+          <SearchBar
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Buscar empresas, categorias..."
+          />
+          <div className="mt-2 text-sm text-text-secondary">
+            {businesses.length > 0 && `${businesses.length} empresas encontradas`}
+          </div>
+        </div>
       </div>
-      <Suspense fallback={<div>Carregando busca...</div>}>
-        <SearchController />
-      </Suspense>
+
+      <div className="container mx-auto px-4 py-6">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-5">
+          {/* Filtros - Desktop */}
+          <aside className="hidden lg:block lg:col-span-1">
+            <div className="sticky top-24 rounded-xl bg-white p-6 shadow-sm">
+              <h3 className="mb-4 text-lg font-semibold">Filtros</h3>
+              
+              <div className="space-y-4">
+                {/* Categoria */}
+                <div>
+                  <label className="mb-2 block text-sm font-medium">Categoria</label>
+                  <div className="space-y-2">
+                    <label className="flex items-center">
+                      <input type="checkbox" className="mr-2" />
+                      <span className="text-sm">Restaurantes</span>
+                    </label>
+                    <label className="flex items-center">
+                      <input type="checkbox" className="mr-2" />
+                      <span className="text-sm">Beleza</span>
+                    </label>
+                    <label className="flex items-center">
+                      <input type="checkbox" className="mr-2" />
+                      <span className="text-sm">Pet Shop</span>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Distância */}
+                <div>
+                  <label className="mb-2 block text-sm font-medium">Distância</label>
+                  <div className="space-y-2">
+                    <label className="flex items-center">
+                      <input type="radio" name="distance" className="mr-2" />
+                      <span className="text-sm">Até 1km</span>
+                    </label>
+                    <label className="flex items-center">
+                      <input type="radio" name="distance" className="mr-2" />
+                      <span className="text-sm">Até 3km</span>
+                    </label>
+                    <label className="flex items-center">
+                      <input type="radio" name="distance" className="mr-2" />
+                      <span className="text-sm">Até 5km</span>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Com cupom */}
+                <div>
+                  <label className="flex items-center">
+                    <input type="checkbox" className="mr-2" />
+                    <span className="text-sm font-medium">Apenas com cupom</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </aside>
+
+          {/* Resultados */}
+          <main className="lg:col-span-4">
+            {/* Grid de cards - 3 colunas desktop, 1 mobile */}
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+              {businesses.map(business => (
+                <BusinessCard key={business.id} business={business} />
+              ))}
+            </div>
+
+            {/* Loading skeletons */}
+            {loading && (
+              <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+                {[...Array(6)].map((_, i) => (
+                  <div key={i} className="h-[140px] rounded-xl bg-white p-4">
+                    <Skeleton className="mb-2 h-6 w-3/4" />
+                    <Skeleton className="mb-2 h-4 w-1/2" />
+                    <Skeleton className="h-4 w-full" />
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Observer target for infinite scroll */}
+            <div ref={observerTarget} className="h-10" />
+
+            {/* Fim da lista */}
+            {!hasMore && businesses.length > 0 && (
+              <div className="mt-8 text-center">
+                <p className="text-text-secondary">
+                  Você viu todas as {businesses.length} empresas
+                </p>
+                <button
+                  onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                  className="mt-4 text-verde hover:underline"
+                >
+                  Voltar ao topo ↑
+                </button>
+              </div>
+            )}
+          </main>
+        </div>
+      </div>
     </div>
   )
 }

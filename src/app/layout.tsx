@@ -3,21 +3,22 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
-import { ToastContainer, useToast } from "@/components/ui/Toast";
+import { ClientProviders } from "@/components/ClientProviders";
 
-const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
-const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
+const geistSans = Geist({ 
+  variable: "--font-geist-sans", 
+  subsets: ["latin"] 
+});
+
+const geistMono = Geist_Mono({ 
+  variable: "--font-geist-mono", 
+  subsets: ["latin"] 
+});
 
 export const metadata: Metadata = {
   title: "Guia Marajoara",
   description: "O Guia Digital do Bairro Jardim Marajoara",
 };
-
-// Componente para gerenciar toasts que precisa ser um Client Component
-function ToastProvider() {
-  const { toasts, removeToast } = useToast();
-  return <ToastContainer toasts={toasts} onClose={removeToast} />;
-}
 
 export default function RootLayout({
   children,
@@ -27,12 +28,13 @@ export default function RootLayout({
   return (
     <html lang="pt-BR">
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
-        <Navbar />
-        <main role="main" id="main">
-          {children}
-        </main>
-        <Footer />
-        {/* O ToastContainer precisa ser renderizado no lado do cliente */}
+        <ClientProviders>
+          <Navbar />
+          <main role="main" id="main">
+            {children}
+          </main>
+          <Footer />
+        </ClientProviders>
       </body>
     </html>
   );

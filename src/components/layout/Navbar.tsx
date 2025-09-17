@@ -1,3 +1,4 @@
+// app/components/layout/Navbar.tsx
 'use client'
 
 import { useState, useEffect } from 'react'
@@ -9,6 +10,7 @@ export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const [currentMessage, setCurrentMessage] = useState(0)
+  const [mounted, setMounted] = useState(false)
 
   const messages = [
     '🎉 Novos cupons toda semana!',
@@ -17,26 +19,46 @@ export function Navbar() {
     '✨ Cadastre-se e ganhe cupons exclusivos',
   ]
 
+  // Ensure component only renders on client
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
   // Rotate topbar messages
   useEffect(() => {
+    if (!mounted) return
+    
     const interval = setInterval(() => {
       setCurrentMessage((prev) => (prev + 1) % messages.length)
     }, 4000)
+    
     return () => clearInterval(interval)
-  }, [messages.length])
+  }, [mounted, messages.length])
 
-  // Handle scroll para navbar sticky
+  // Handle scroll
   useEffect(() => {
+    if (!mounted) return
+    
     const handleScroll = () => {
       setScrolled(window.scrollY > 100)
     }
+    
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
+  }, [mounted])
+
+  // Prevent SSR issues
+  if (!mounted) {
+    return (
+      <div className="h-[104px] bg-white">
+        {/* Placeholder to prevent layout shift */}
+      </div>
+    )
+  }
 
   return (
     <>
-      {/* Skip Link para Acessibilidade */}
+      {/* Skip Link */}
       <a 
         href="#main" 
         className="sr-only focus:not-sr-only focus:absolute focus:top-0 focus:left-0 focus:z-50 focus:p-4 focus:bg-[#C2227A] focus:text-white focus:rounded-br-lg"
@@ -44,7 +66,7 @@ export function Navbar() {
         Pular para o conteúdo principal
       </a>
 
-      {/* Topbar com mensagens rotativas */}
+      {/* Topbar */}
       <div className="bg-[#C2227A] h-10 relative overflow-hidden">
         <div className="container mx-auto px-4 h-full">
           <div className="relative h-full flex items-center justify-center">
@@ -67,7 +89,7 @@ export function Navbar() {
         </div>
       </div>
 
-      {/* Main Navbar */}
+      {/* Main Navigation */}
       <nav
         className={cn(
           'bg-white border-b border-gray-100 sticky top-0 z-30 transition-all duration-300',
@@ -78,7 +100,6 @@ export function Navbar() {
       >
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between">
-            
             {/* Logo */}
             <Link 
               href="/" 
@@ -89,44 +110,24 @@ export function Navbar() {
               <span className="text-[#7CB342]">SP</span>
             </Link>
 
-            {/* Desktop Menu - Hidden on Mobile */}
+            {/* Desktop Menu */}
             <ul className="hidden md:flex items-center gap-8" role="menu">
-              <li role="menuitem">
-                <Link 
-                  href="/" 
-                  className="text-[#C2227A] hover:text-[#7CB342] transition-colors font-medium relative group"
-                >
-                  HOME
-                  <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#7CB342] transition-all group-hover:w-full"></span>
-                </Link>
-              </li>
-              <li role="menuitem">
-                <Link 
-                  href="/busca" 
-                  className="text-[#C2227A] hover:text-[#7CB342] transition-colors font-medium relative group"
-                >
-                  BUSCA
-                  <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#7CB342] transition-all group-hover:w-full"></span>
-                </Link>
-              </li>
-              <li role="menuitem">
-                <Link 
-                  href="/cupons" 
-                  className="text-[#C2227A] hover:text-[#7CB342] transition-colors font-medium relative group"
-                >
-                  CUPONS
-                  <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#7CB342] transition-all group-hover:w-full"></span>
-                </Link>
-              </li>
-              <li role="menuitem">
-                <Link 
-                  href="/destaque" 
-                  className="text-[#C2227A] hover:text-[#7CB342] transition-colors font-medium relative group"
-                >
-                  DESTAQUE
-                  <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#7CB342] transition-all group-hover:w-full"></span>
-                </Link>
-              </li>
+              {[
+                { href: '/', label: 'HOME' },
+                { href: '/busca', label: 'BUSCA' },
+                { href: '/cupons', label: 'CUPONS' },
+                { href: '/destaque', label: 'DESTAQUE' },
+              ].map((item) => (
+                <li key={item.href} role="menuitem">
+                  <Link 
+                    href={item.href}
+                    className="text-[#C2227A] hover:text-[#7CB342] transition-colors font-medium relative group"
+                  >
+                    {item.label}
+                    <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#7CB342] transition-all group-hover:w-full" />
+                  </Link>
+                </li>
+              ))}
               <li role="menuitem">
                 <Link 
                   href="/cadastro" 
@@ -137,9 +138,8 @@ export function Navbar() {
               </li>
             </ul>
 
-            {/* Desktop Actions - Hidden on Mobile */}
+            {/* Desktop Actions */}
             <div className="hidden md:flex items-center gap-4">
-              {/* Login Button */}
               <Link
                 href="/login"
                 className="p-2 rounded-full hover:bg-gray-100 transition-colors text-[#C2227A]"
@@ -150,10 +150,9 @@ export function Navbar() {
                 </svg>
               </Link>
 
-              {/* Divider */}
-              <div className="h-6 w-px bg-gray-200"></div>
+              <div className="h-6 w-px bg-gray-200" />
 
-              {/* Social Links */}
+              
               <a
                 href="https://instagram.com/jardimmarajoarasp"
                 target="_blank"
@@ -179,13 +178,11 @@ export function Navbar() {
               </a>
             </div>
 
-            {/* Mobile Menu Button - Visible only on Mobile */}
+            {/* Mobile Menu Button */}
             <button
               className="md:hidden p-2 text-[#C2227A] hover:bg-gray-100 rounded-lg transition-colors"
               onClick={() => setMobileMenuOpen(true)}
               aria-label="Abrir menu de navegação"
-              aria-expanded={mobileMenuOpen}
-              aria-controls="mobile-menu"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
@@ -195,7 +192,7 @@ export function Navbar() {
         </div>
       </nav>
 
-      {/* Mobile Menu Component - Renderizado via Portal */}
+      {/* Mobile Menu */}
       <MobileMenu 
         isOpen={mobileMenuOpen} 
         onClose={() => setMobileMenuOpen(false)} 

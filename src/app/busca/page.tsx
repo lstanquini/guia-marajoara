@@ -1,182 +1,260 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback } from 'react'
-import { useSearchParams } from 'next/navigation'
-import { searchBusinesses } from '@/lib/mock-data'
+import { useState, useEffect, useCallback } from 'react'
+import { Navbar } from '@/components/layout/Navbar'
 import { SearchBar } from '@/components/ui/SearchBar'
 import { BusinessCard } from '@/components/BusinessCard'
-import { Skeleton } from '@/components/ui/Loading'
+import { LoadingCard } from '@/components/ui/Loading'
+import { Button } from '@/components/ui/Button'
 
-export default function SearchPage() {
-  const searchParams = useSearchParams()
-  const [businesses, setBusinesses] = useState<any[]>([])
-  const [loading, setLoading] = useState(false)
-  const [page, setPage] = useState(1)
-  const [hasMore, setHasMore] = useState(true)
-  const [query, setQuery] = useState(searchParams.get('q') || '')
-  const observerTarget = useRef<HTMLDivElement>(null)
+// Interface para Business tipada corretamente
+interface Business {
+  id: string
+  name: string
+  slug: string
+  description: string
+  category_main: string
+  category_sub?: string
+  phone?: string
+  whatsapp?: string
+  website?: string
+  instagram?: string
+  email?: string
+  address: string
+  address_number?: string
+  neighborhood?: string
+  city: string
+  state: string
+  zip_code?: string
+  latitude?: number
+  longitude?: number
+  opening_hours?: Record<string, string>
+  delivery?: boolean
+  rating?: number
+  total_reviews?: number
+  logo_url?: string
+  banner_url?: string
+  featured_until?: string
+  plan_type: 'basic' | 'premium'
+  status: 'pending' | 'approved' | 'suspended'
+  created_at: string
+  updated_at: string
+}
 
-  // Carregar dados iniciais
-  const loadBusinesses = useCallback(async (reset = false) => {
-    if (loading) return
-    
-    setLoading(true)
-    const currentPage = reset ? 1 : page
-    
-    const result = await searchBusinesses(query, currentPage, 12)
-    
-    if (reset) {
-      setBusinesses(result.businesses)
-      setPage(2)
-    } else {
-      setBusinesses(prev => [...prev, ...result.businesses])
-      setPage(prev => prev + 1)
-    }
-    
-    setHasMore(result.hasMore)
-    setLoading(false)
-  }, [query, page, loading])
+export default function BuscaPage() {
+  const [searchQuery, setSearchQuery] = useState('')
+  const [businesses, setBusinesses] = useState<Business[]>([])
+  const [filteredBusinesses, setFilteredBusinesses] = useState<Business[]>([])
+  const [loading, setLoading] = useState(true)
+  const [selectedCategory, setSelectedCategory] = useState<string>('all')
 
-  // Infinite scroll observer
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      entries => {
-        if (entries[0].isIntersecting && hasMore && !loading) {
-          loadBusinesses()
+  const categories = [
+    { value: 'all', label: 'Todas' },
+    { value: 'vestuario', label: 'Vestuário' },
+    { value: 'pet', label: 'PET' },
+    { value: 'imovel', label: 'Imóvel' },
+    { value: 'doces', label: 'Doces & Bolos' },
+    { value: 'acessorios', label: 'Acessórios' },
+    { value: 'fitness', label: 'Fitness' },
+    { value: 'beleza', label: 'Beleza' },
+    { value: 'saude', label: 'Saúde' },
+    { value: 'restaurante', label: 'Restaurantes' },
+  ]
+
+  // useCallback para evitar recriação da função
+  const loadBusinesses = useCallback(async () => {
+    try {
+      // Por enquanto usando dados mockados
+      const mockData: Business[] = [
+        {
+          id: '1',
+          name: 'Pizzaria Bella Italia',
+          slug: 'pizzaria-bella-italia',
+          description: 'A melhor pizza do bairro',
+          category_main: 'restaurante',
+          phone: '(11) 5555-1234',
+          whatsapp: '11955551234',
+          address: 'Rua das Flores, 123',
+          neighborhood: 'Jardim Marajoara',
+          city: 'São Paulo',
+          state: 'SP',
+          rating: 4.5,
+          total_reviews: 127,
+          plan_type: 'premium',
+          status: 'approved',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        },
+        {
+          id: '2',
+          name: 'Pet Shop Amigo Fiel',
+          slug: 'pet-shop-amigo-fiel',
+          description: 'Tudo para seu pet',
+          category_main: 'pet',
+          phone: '(11) 5555-5678',
+          whatsapp: '11955555678',
+          address: 'Av. do Cursino, 456',
+          neighborhood: 'Jardim Marajoara',
+          city: 'São Paulo',
+          state: 'SP',
+          rating: 4.8,
+          total_reviews: 89,
+          plan_type: 'basic',
+          status: 'approved',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        },
+        {
+          id: '3',
+          name: 'Academia PowerFit',
+          slug: 'academia-powerfit',
+          description: 'Seu corpo em forma',
+          category_main: 'fitness',
+          phone: '(11) 5555-9012',
+          whatsapp: '11955559012',
+          address: 'Rua do Esporte, 789',
+          neighborhood: 'Jardim Marajoara',
+          city: 'São Paulo',
+          state: 'SP',
+          rating: 4.2,
+          total_reviews: 56,
+          plan_type: 'premium',
+          status: 'approved',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
         }
-      },
-      { threshold: 0.1, rootMargin: '100px' }
-    )
+      ]
 
-    if (observerTarget.current) {
-      observer.observe(observerTarget.current)
+      setBusinesses(mockData)
+      setFilteredBusinesses(mockData)
+      setLoading(false)
+    } catch (error) {
+      console.error('Erro ao carregar empresas:', error)
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    loadBusinesses()
+  }, [loadBusinesses])
+
+  // Filtrar por busca e categoria
+  useEffect(() => {
+    let filtered = businesses
+
+    // Filtrar por categoria
+    if (selectedCategory !== 'all') {
+      filtered = filtered.filter(b => b.category_main === selectedCategory)
     }
 
-    return () => observer.disconnect()
-  }, [hasMore, loading, loadBusinesses])
+    // Filtrar por texto de busca
+    if (searchQuery) {
+      filtered = filtered.filter(b =>
+        b.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        b.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        b.category_main.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    }
 
-  // Busca inicial e quando query muda
-  useEffect(() => {
-    setBusinesses([])
-    setPage(1)
-    loadBusinesses(true)
-  }, [query])
+    setFilteredBusinesses(filtered)
+  }, [searchQuery, selectedCategory, businesses])
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header com busca */}
-      <div className="sticky top-0 z-40 bg-white shadow-sm">
-        <div className="container mx-auto px-4 py-4">
-          <SearchBar
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Buscar empresas, categorias..."
-          />
-          <div className="mt-2 text-sm text-text-secondary">
-            {businesses.length > 0 && `${businesses.length} empresas encontradas`}
+    <>
+      <Navbar />
+      
+      <main className="min-h-screen bg-[#F8F9FA]">
+        {/* Hero Section */}
+        <section className="bg-gradient-to-r from-[#C2227A] to-[#A01860] py-12">
+          <div className="container mx-auto px-4">
+            <h1 className="text-3xl md:text-4xl font-bold text-white text-center mb-2">
+              Encontre o que você procura
+            </h1>
+            <p className="text-white/80 text-center mb-8">
+              Mais de 130 comércios e serviços no Jardim Marajoara
+            </p>
+            
+            <div className="max-w-2xl mx-auto">
+              <SearchBar
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onSearch={(value) => setSearchQuery(value)}
+                className="shadow-xl"
+              />
+            </div>
           </div>
-        </div>
-      </div>
+        </section>
 
-      <div className="container mx-auto px-4 py-6">
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-5">
-          {/* Filtros - Desktop */}
-          <aside className="hidden lg:block lg:col-span-1">
-            <div className="sticky top-24 rounded-xl bg-white p-6 shadow-sm">
-              <h3 className="mb-4 text-lg font-semibold">Filtros</h3>
-              
-              <div className="space-y-4">
-                {/* Categoria */}
-                <div>
-                  <label className="mb-2 block text-sm font-medium">Categoria</label>
-                  <div className="space-y-2">
-                    <label className="flex items-center">
-                      <input type="checkbox" className="mr-2" />
-                      <span className="text-sm">Restaurantes</span>
-                    </label>
-                    <label className="flex items-center">
-                      <input type="checkbox" className="mr-2" />
-                      <span className="text-sm">Beleza</span>
-                    </label>
-                    <label className="flex items-center">
-                      <input type="checkbox" className="mr-2" />
-                      <span className="text-sm">Pet Shop</span>
-                    </label>
-                  </div>
-                </div>
-
-                {/* Distância */}
-                <div>
-                  <label className="mb-2 block text-sm font-medium">Distância</label>
-                  <div className="space-y-2">
-                    <label className="flex items-center">
-                      <input type="radio" name="distance" className="mr-2" />
-                      <span className="text-sm">Até 1km</span>
-                    </label>
-                    <label className="flex items-center">
-                      <input type="radio" name="distance" className="mr-2" />
-                      <span className="text-sm">Até 3km</span>
-                    </label>
-                    <label className="flex items-center">
-                      <input type="radio" name="distance" className="mr-2" />
-                      <span className="text-sm">Até 5km</span>
-                    </label>
-                  </div>
-                </div>
-
-                {/* Com cupom */}
-                <div>
-                  <label className="flex items-center">
-                    <input type="checkbox" className="mr-2" />
-                    <span className="text-sm font-medium">Apenas com cupom</span>
-                  </label>
+        {/* Filtros e Resultados */}
+        <section className="container mx-auto px-4 py-8">
+          <div className="flex flex-col lg:flex-row gap-8">
+            {/* Sidebar Filtros */}
+            <aside className="lg:w-64 flex-shrink-0">
+              <div className="bg-white rounded-2xl shadow-sm p-6">
+                <h2 className="text-lg font-semibold text-[#1A1A1A] mb-4">
+                  Categorias
+                </h2>
+                
+                <div className="space-y-2">
+                  {categories.map((cat) => (
+                    <Button
+                      key={cat.value}
+                      variant={selectedCategory === cat.value ? 'primary' : 'ghost'}
+                      size="full"
+                      className="justify-start"
+                      onClick={() => setSelectedCategory(cat.value)}
+                    >
+                      {cat.label}
+                    </Button>
+                  ))}
                 </div>
               </div>
-            </div>
-          </aside>
+            </aside>
 
-          {/* Resultados */}
-          <main className="lg:col-span-4">
-            {/* Grid de cards - 3 colunas desktop, 1 mobile */}
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-              {businesses.map(business => (
-                <BusinessCard key={business.id} business={business} />
-              ))}
-            </div>
-
-            {/* Loading skeletons */}
-            {loading && (
-              <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-                {[...Array(6)].map((_, i) => (
-                  <div key={i} className="h-[140px] rounded-xl bg-white p-4">
-                    <Skeleton className="mb-2 h-6 w-3/4" />
-                    <Skeleton className="mb-2 h-4 w-1/2" />
-                    <Skeleton className="h-4 w-full" />
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Observer target for infinite scroll */}
-            <div ref={observerTarget} className="h-10" />
-
-            {/* Fim da lista */}
-            {!hasMore && businesses.length > 0 && (
-              <div className="mt-8 text-center">
-                <p className="text-text-secondary">
-                  Você viu todas as {businesses.length} empresas
+            {/* Resultados */}
+            <div className="flex-1">
+              {/* Header dos resultados */}
+              <div className="flex items-center justify-between mb-6">
+                <p className="text-[#6B7280]">
+                  {loading ? 'Carregando...' : `${filteredBusinesses.length} resultados encontrados`}
                 </p>
-                <button
-                  onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                  className="mt-4 text-verde hover:underline"
-                >
-                  Voltar ao topo ↑
-                </button>
+                
+                <select className="px-4 py-2 rounded-lg border border-gray-200 text-sm">
+                  <option>Mais relevantes</option>
+                  <option>A-Z</option>
+                  <option>Melhor avaliados</option>
+                  <option>Mais próximos</option>
+                </select>
               </div>
-            )}
-          </main>
-        </div>
-      </div>
-    </div>
+
+              {/* Grid de resultados */}
+              {loading ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {[1, 2, 3, 4, 5, 6].map((n) => (
+                    <LoadingCard key={n} />
+                  ))}
+                </div>
+              ) : filteredBusinesses.length === 0 ? (
+                <div className="bg-white rounded-2xl shadow-sm p-12 text-center">
+                  <div className="text-6xl mb-4">🔍</div>
+                  <h3 className="text-xl font-semibold text-[#1A1A1A] mb-2">
+                    Nenhum resultado encontrado
+                  </h3>
+                  <p className="text-[#6B7280]">
+                    Tente buscar por outros termos ou categorias
+                  </p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {filteredBusinesses.map((business) => (
+                    <BusinessCard key={business.id} business={business} />
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
+      </main>
+    </>
   )
 }

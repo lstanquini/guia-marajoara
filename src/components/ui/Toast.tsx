@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { cn } from '@/lib/utils'
 
@@ -50,6 +50,14 @@ export function Toast({
   const [progress, setProgress] = useState(100)
   const styles = variantStyles[variant]
 
+  // useCallback para evitar dependência no useEffect
+  const handleClose = useCallback(() => {
+    setIsVisible(false)
+    setTimeout(() => {
+      onClose?.(id)
+    }, 200)
+  }, [id, onClose])
+
   useEffect(() => {
     // Animate in
     requestAnimationFrame(() => {
@@ -77,14 +85,7 @@ export function Toast({
         clearTimeout(timeout)
       }
     }
-  }, [duration, id])
-
-  const handleClose = () => {
-    setIsVisible(false)
-    setTimeout(() => {
-      onClose?.(id)
-    }, 200)
-  }
+  }, [duration, handleClose])
 
   return (
     <div

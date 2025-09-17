@@ -1,78 +1,165 @@
 'use client'
 
-import Link from 'next/link'
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
-import { cn } from '@/lib/utils'
+import { Star, MapPin, Phone } from 'lucide-react'
 
-interface BusinessCardProps {
-  business: any
-  className?: string
+// Interface Business tipada
+interface Business {
+  id: string
+  name: string
+  slug: string
+  description: string
+  category_main: string
+  category_sub?: string
+  phone?: string
+  whatsapp?: string
+  website?: string
+  instagram?: string
+  email?: string
+  address: string
+  address_number?: string
+  neighborhood?: string
+  city: string
+  state: string
+  zip_code?: string
+  latitude?: number
+  longitude?: number
+  opening_hours?: Record<string, string>
+  delivery?: boolean
+  rating?: number
+  total_reviews?: number
+  logo_url?: string
+  banner_url?: string
+  featured_until?: string
+  plan_type: 'basic' | 'premium'
+  status: 'pending' | 'approved' | 'suspended'
+  created_at: string
+  updated_at: string
 }
 
-export function BusinessCard({ business, className }: BusinessCardProps) {
-  const handleGetCoupon = (e: React.MouseEvent) => {
-    e.preventDefault()
-    // TODO: Abrir modal WhatsApp
-    alert(`Pegando cupom: ${business.latestCoupon?.code}`)
+interface BusinessCardProps {
+  business: Business
+  variant?: 'default' | 'featured'
+}
+
+export function BusinessCard({ business, variant = 'default' }: BusinessCardProps) {
+  const handleWhatsApp = () => {
+    if (business.whatsapp) {
+      const phone = business.whatsapp.replace(/\D/g, '')
+      const message = `Olá! Vi vocês no Guia Marajoara e gostaria de mais informações.`
+      window.open(`https://wa.me/55${phone}?text=${encodeURIComponent(message)}`, '_blank')
+    }
+  }
+
+  const getCategoryEmoji = (category: string) => {
+    const emojis: Record<string, string> = {
+      restaurante: '🍕',
+      pet: '🐾',
+      fitness: '💪',
+      beleza: '💅',
+      saude: '🏥',
+      vestuario: '👕',
+      imovel: '🏠',
+      doces: '🍰',
+      acessorios: '👜',
+      servicos: '🔧'
+    }
+    return emojis[category] || '🏪'
+  }
+
+  const getCategoryLabel = (category: string) => {
+    const labels: Record<string, string> = {
+      restaurante: 'Restaurante',
+      pet: 'Pet Shop',
+      fitness: 'Fitness',
+      beleza: 'Beleza',
+      saude: 'Saúde',
+      vestuario: 'Vestuário',
+      imovel: 'Imóvel',
+      doces: 'Doces & Bolos',
+      acessorios: 'Acessórios',
+      servicos: 'Serviços'
+    }
+    return labels[category] || category
   }
 
   return (
-    <article
-      className={cn(
-        'group relative flex h-[140px] flex-col rounded-xl bg-white p-3 shadow-sm transition-all hover:-translate-y-1 hover:shadow-md',
-        className
-      )}
-    >
-      <Link href={`/empresas/${business.slug}`} className="flex flex-1 flex-col">
-        {/* Header com logo e info */}
-        <div className="flex gap-3">
-          <div className="flex h-[50px] w-[50px] flex-shrink-0 items-center justify-center rounded-lg bg-gray-100 text-2xl">
-            {business.logo}
-          </div>
-          <div className="flex-1 min-w-0">
-            <h3 className="truncate font-semibold text-text-primary">
-              {business.name}
-            </h3>
-            <div className="flex items-center gap-2 text-xs text-text-secondary">
-              <span className="flex items-center gap-1">
-                ⭐ {business.rating}
-              </span>
-              <span>•</span>
-              <span>{business.distance}km</span>
-            </div>
-            <p className="text-xs text-text-secondary">{business.category}</p>
-          </div>
+    <Card variant={variant === 'featured' ? 'feature' : 'business'}>
+      <CardHeader>
+        <div className="flex items-start justify-between mb-2">
+          <div className="text-3xl">{getCategoryEmoji(business.category_main)}</div>
+          {business.plan_type === 'premium' && (
+            <span className="bg-gradient-to-r from-[#C2227A] to-[#A01860] text-white text-xs font-semibold px-2 py-1 rounded-full">
+              Premium
+            </span>
+          )}
         </div>
+        <CardTitle className="line-clamp-1">{business.name}</CardTitle>
+        <CardDescription>{getCategoryLabel(business.category_main)}</CardDescription>
+      </CardHeader>
+      
+      <CardContent>
+        {business.description && (
+          <p className="text-sm text-[#6B7280] mb-3 line-clamp-2">
+            {business.description}
+          </p>
+        )}
 
-        {/* Cupom */}
-        {business.latestCoupon && (
-          <div className="mt-2 flex items-center gap-2 rounded-lg bg-green-50 px-2 py-1">
-            <span className="text-xs">🎫</span>
-            <span className="flex-1 truncate text-xs font-medium text-verde">
-              {business.latestCoupon.title}
+        {business.rating && (
+          <div className="flex items-center gap-1 mb-2">
+            <div className="flex items-center text-yellow-400">
+              {[...Array(5)].map((_, i) => (
+                <Star
+                  key={i}
+                  size={14}
+                  fill={i < Math.floor(business.rating!) ? 'currentColor' : 'none'}
+                />
+              ))}
+            </div>
+            <span className="text-xs text-[#6B7280]">
+              {business.rating} ({business.total_reviews || 0})
             </span>
           </div>
         )}
-      </Link>
 
-      {/* Ações */}
-      <div className="mt-2 flex gap-2">
-        {business.latestCoupon && (
+        {business.address && (
+          <div className="flex items-start gap-1 text-xs text-[#6B7280]">
+            <MapPin size={14} className="mt-0.5 flex-shrink-0" />
+            <span className="line-clamp-1">
+              {business.address}
+              {business.address_number && `, ${business.address_number}`}
+              {business.neighborhood && ` - ${business.neighborhood}`}
+            </span>
+          </div>
+        )}
+
+        {business.phone && (
+          <div className="flex items-center gap-1 text-xs text-[#6B7280] mt-1">
+            <Phone size={14} />
+            <span>{business.phone}</span>
+          </div>
+        )}
+      </CardContent>
+
+      <CardFooter className="gap-2">
+        {business.whatsapp && (
           <Button
             size="sm"
-            variant="secondary"
-            onClick={handleGetCoupon}
-            className="flex-1 text-xs"
+            variant="whatsapp"
+            onClick={handleWhatsApp}
           >
-            💬 Cupom
+            WhatsApp
           </Button>
         )}
-        <Link href={`/empresas/${business.slug}`} className="flex-1">
-          <Button size="sm" variant="ghost" className="w-full text-xs">
-            Detalhes
-          </Button>
-        </Link>
-      </div>
-    </article>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => window.location.href = `/empresas/${business.slug}`}
+        >
+          Ver mais
+        </Button>
+      </CardFooter>
+    </Card>
   )
 }

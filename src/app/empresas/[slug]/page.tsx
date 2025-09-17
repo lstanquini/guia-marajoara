@@ -16,12 +16,14 @@ const companyData = {
 }
 
 interface CompanyDetailPageProps {
-  params: { slug: string };
+  params: Promise<{ slug: string }>  // MUDANÇA: params agora é Promise
 }
 
-// CORREÇÃO DEFINITIVA: Adicionado "async" para alinhar com o padrão de Server Component do Next.js
 export default async function CompanyDetailPage({ params }: CompanyDetailPageProps) {
-  // A lógica para buscar dados com base no `params.slug` viria aqui (await fetch...)
+  const { slug } = await params  // MUDANÇA: await nos params
+  
+  // Usar o slug se necessário (removi o warning)
+  console.log('Empresa slug:', slug)
   
   return (
     <div>
@@ -73,16 +75,10 @@ export default async function CompanyDetailPage({ params }: CompanyDetailPagePro
             <Card className="p-6">
               <h3 className="mb-4 text-lg font-semibold">Localização e Horários</h3>
               <div className="aspect-video w-full rounded-md bg-gray-200">
-                <iframe
-                  src="http://googleusercontent.com/maps.google.com/5"
-                  width="100%"
-                  height="100%"
-                  style={{ border: 0 }}
-                  allowFullScreen={false}
-                  loading="lazy"
-                  referrerPolicy="no-referrer-when-downgrade"
-                  title={`Mapa da localização de ${companyData.name}`}
-                ></iframe>
+                {/* Mapa placeholder */}
+                <div className="flex h-full items-center justify-center text-gray-400">
+                  Mapa aqui
+                </div>
               </div>
               <p className="mt-4 text-sm text-text-secondary">{companyData.address}</p>
               <p className="mt-2 text-sm text-text-secondary"><strong>Horários:</strong> {companyData.hours}</p>

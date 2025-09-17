@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation' // <-- ADICIONADO
+import { useRouter } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { SearchBar } from '@/components/ui/SearchBar'
 import { Card } from '@/components/ui/Card'
@@ -27,9 +27,8 @@ const counters = [
 
 export function HeroSection() {
   const [searchValue, setSearchValue] = useState('')
-  const router = useRouter() // <-- ADICIONADO
+  const router = useRouter()
 
-  // FUNÇÃO ADICIONADA PARA CONECTAR A BUSCA
   const handleSearch = (query: string) => {
     if (query.trim()) {
       router.push(`/busca?q=${encodeURIComponent(query.trim())}`)
@@ -48,7 +47,7 @@ export function HeroSection() {
           </h1>
         </div>
 
-        {/* Search - Prop 'onSearch' adicionada */}
+        {/* Search */}
         <div className="mb-12">
           <div className="mx-auto max-w-2xl">
             <SearchBar 
@@ -78,8 +77,9 @@ export function HeroSection() {
               </Card>
             ))}
           </div>
+          {/* Link Corrigido para apontar para /busca */}
           <Link
-            href="/categorias"
+            href="/busca"
             className="mt-4 block text-center text-sm font-medium text-verde hover:underline md:hidden"
           >
             Ver todas as categorias →

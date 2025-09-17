@@ -18,17 +18,13 @@ function SearchController() {
   const searchParams = useSearchParams()
   const initialQuery = searchParams.get('q') || ''
   const [query, setQuery] = useState(initialQuery)
-  
-  // CORRIGIDO: O estado dos resultados agora é uma lista de empresas
   const [filteredBusinesses, setFilteredBusinesses] = useState(mockBusinesses)
 
   const handleFilter = () => {
-    // Simula uma busca que retorna 3 resultados
     setFilteredBusinesses(mockBusinesses.slice(0, 3));
   }
   
   const handleResetFilter = () => {
-    // CORRIGIDO: Função para resetar o filtro
     setFilteredBusinesses(mockBusinesses);
   }
 

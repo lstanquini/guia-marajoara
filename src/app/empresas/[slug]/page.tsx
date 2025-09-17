@@ -6,7 +6,7 @@ const companyData = {
   name: 'Pizzaria Bella Italia',
   category: 'Restaurante • Pizza • Italiana',
   logo: '🍕',
-  description: 'A autêntica pizza napolitana no coração do Jardim Marajoara...',
+  description: 'A autêntica pizza napolitana no coração do Jardim Marajoara. Usamos apenas os melhores ingredientes, com massa de fermentação natural e forno a lenha para garantir uma experiência inesquecível.',
   coupons: [
     { code: 'PIZZA20', title: '20% OFF no Rodízio' },
     { code: 'BELLA10', title: '10% OFF em Pizzas Grandes' },
@@ -19,7 +19,7 @@ interface CompanyDetailPageProps {
   params: { slug: string };
 }
 
-// CORRIGIDO: Adicionado "async" para alinhar com o padrão de Server Component do Next.js
+// CORREÇÃO DEFINITIVA: Adicionado "async" para alinhar com o padrão de Server Component do Next.js
 export default async function CompanyDetailPage({ params }: CompanyDetailPageProps) {
   // A lógica para buscar dados com base no `params.slug` viria aqui (await fetch...)
   
@@ -74,7 +74,7 @@ export default async function CompanyDetailPage({ params }: CompanyDetailPagePro
               <h3 className="mb-4 text-lg font-semibold">Localização e Horários</h3>
               <div className="aspect-video w-full rounded-md bg-gray-200">
                 <iframe
-                  src="http://googleusercontent.com/maps.google.com/4"
+                  src="http://googleusercontent.com/maps.google.com/5"
                   width="100%"
                   height="100%"
                   style={{ border: 0 }}

@@ -164,3 +164,14 @@
     background: rgba(0, 0, 0, 0.3);
   }
 }
+
+/* Em src/app/globals.css */
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}

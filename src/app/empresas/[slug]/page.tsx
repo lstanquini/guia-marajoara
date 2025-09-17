@@ -1,14 +1,10 @@
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
-import { Badge } from '@/components/ui/Badge'
 
 // Mock Data para uma empresa específica
 const companyData = {
   name: 'Pizzaria Bella Italia',
   category: 'Restaurante • Pizza • Italiana',
-  rating: '4.8',
-  reviews: 127,
-  coverImage: '/images/cover-pizza.jpg',
   logo: '🍕',
   description: 'A autêntica pizza napolitana no coração do Jardim Marajoara. Usamos apenas os melhores ingredientes, com massa de fermentação natural e forno a lenha para garantir uma experiência inesquecível.',
   coupons: [
@@ -19,7 +15,7 @@ const companyData = {
   hours: 'Ter-Dom: 18h às 23h',
 }
 
-// CORREÇÃO: Definindo uma interface explícita para as props da página
+// CORREÇÃO: A interface explícita que resolve o erro de build
 interface CompanyDetailPageProps {
   params: { slug: string };
 }
@@ -78,7 +74,7 @@ export default function CompanyDetailPage({ params }: CompanyDetailPageProps) {
               <h3 className="mb-4 text-lg font-semibold">Localização e Horários</h3>
               <div className="aspect-video w-full rounded-md bg-gray-200">
                 <iframe
-                  src="http://googleusercontent.com/maps.google.com/2"
+                  src="http://googleusercontent.com/maps.google.com/3"
                   width="100%"
                   height="100%"
                   style={{ border: 0 }}

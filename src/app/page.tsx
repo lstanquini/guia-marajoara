@@ -1,23 +1,19 @@
 'use client'
 import { useState } from 'react'
-import { HeroSection } from '@/components/layout/HeroSection'
+import HeroSection from '@/components/layout/HeroSection'
 import { RecentBusinesses } from '@/components/layout/RecentBusinesses'
 import { ActiveCoupons } from '@/components/layout/ActiveCoupons'
 import { FeaturedSection } from '@/components/layout/FeaturedSection'
 import { MariCarreiraSection } from '@/components/layout/MariCarreiraSection'
 import { Button } from '@/components/ui/Button'
 import { Card, CardHeader, CardTitle } from '@/components/ui/Card'
-// Removidos: CardDescription, CardContent, CardFooter - não usados
-// Removidos: Spinner, Skeleton, LoadingCard - não usados
 import { Modal } from '@/components/ui/Modal'
-// Removido: SearchBar - não usado
 import { useToast } from '@/components/ui/Toast'
 
-export default function HomePage() { // Mudei de TestPage para HomePage
+export default function HomePage() {
   const [modalOpen, setModalOpen] = useState(false)
-  // Removido: searchValue - não usado
   const { addToast } = useToast()
-  // Removido: handleSearch - não usado
+  
   const showSuccessToast = () => { 
     addToast({ 
       title: 'Sucesso!', 
@@ -25,7 +21,6 @@ export default function HomePage() { // Mudei de TestPage para HomePage
       variant: 'success' 
     }) 
   }
-  // Removidos: showErrorToast e showWarningToast - não usados nesta página
   
   return (
     <>
@@ -34,6 +29,7 @@ export default function HomePage() { // Mudei de TestPage para HomePage
       <ActiveCoupons />
       <FeaturedSection />
       <MariCarreiraSection />
+      
       <div className="container mx-auto px-4 py-8">
         <section className="mb-12 border-t pt-12">
           <h2 className="text-2xl font-bold text-[#1A1A1A] mb-6">

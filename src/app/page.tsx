@@ -1,10 +1,11 @@
+// src/app/page.tsx
 'use client'
 
 import { useState } from 'react'
 
 // Importações dos Componentes Principais
 import HeroSection from '@/components/layout/HeroSection'
-import { CategoryHighlights } from '@/components/layout/CategoryHighlights' // <-- IMPORTAÇÃO NOVA
+import { CategoryHighlights } from '@/components/layout/CategoryHighlights'
 import { RecentBusinesses } from '@/components/layout/RecentBusinesses'
 import { ActiveCoupons } from '@/components/layout/ActiveCoupons'
 import { FeaturedSection } from '@/components/layout/FeaturedSection'
@@ -30,7 +31,7 @@ function HomePageSearchBar() {
       value={query}
       onChange={(e) => setQuery(e.target.value)}
       onSearch={handleSearch}
-      placeholder="O que você está procurando hoje?"
+      placeholder="Buscar estabelecimentos, serviços..."
       className="shadow-xl"
     />
   );
@@ -38,26 +39,29 @@ function HomePageSearchBar() {
 
 /**
  * Página principal (Homepage) do site.
+ * Agora com novo Hero Section com banner e logo MaraON
  */
 export default function HomePage() {
   return (
     <>
-      <HeroSection
-        title="Bem-vindo ao Guia Marajoara"
-        subtitle="Tudo sobre o bairro na palma da sua mão."
-      >
+      {/* Hero Section com novo design */}
+      <HeroSection>
         <HomePageSearchBar />
       </HeroSection>
 
-      {/* SEÇÃO DE CATEGORIAS ADICIONADA AQUI */}
+      {/* Categorias em destaque */}
       <CategoryHighlights />
 
+      {/* Empresas recentes */}
       <RecentBusinesses />
       
+      {/* Cupons ativos */}
       <ActiveCoupons />
       
+      {/* Seção de destaque */}
       <FeaturedSection />
       
+      {/* Seção Mari Carreira */}
       <MariCarreiraSection />
     </>
   )

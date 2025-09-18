@@ -55,15 +55,17 @@ export default function HeroSection({ children }: HeroSectionProps) {
           {/* Conteúdo centralizado sobre a imagem */}
           <div className="relative z-10 h-full flex flex-col items-center justify-center px-4 py-8 md:py-12">
             
-            {/* Logo MaraON - MAIOR AINDA */}
+            {/* Logo MaraON - AUMENTADO 20% COM QUALIDADE MÁXIMA */}
             <div className="mb-8 md:mb-12">
               <Image
                 src="/images/logo-maraon.png"
                 alt="MaraON - Explore nosso bairro. Resgate seu CUPON"
-                width={500}
-                height={180}
-                className="w-[320px] md:w-[500px] h-auto drop-shadow-2xl"
+                width={600}
+                height={216}
+                className="w-[384px] md:w-[600px] h-auto"
                 priority
+                quality={100}
+                unoptimized={true} // Desabilita otimização automática do Next.js
               />
             </div>
             

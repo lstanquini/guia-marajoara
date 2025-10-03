@@ -1,0 +1,41 @@
+// src/middleware.ts
+import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
+
+// Rotas que precisam de autenticação
+const protectedRoutes = ['/dashboard', '/admin']
+// Rotas públicas que redirecionam se logado
+const authRoutes = ['/login', '/cadastro']  // MUDANÇA AQUI
+
+export function middleware(request: NextRequest) {
+  const token = request.cookies.get('marajoara_token')
+  const { pathname } = request.nextUrl
+
+  // Verificar rotas protegidas
+  const isProtectedRoute = protectedRoutes.some(route => 
+    pathname.startsWith(route)
+  )
+
+  // Verificar rotas de auth
+  const isAuthRoute = authRoutes.some(route => 
+    pathname.startsWith(route)
+  )
+
+  // Se tentando acessar rota protegida sem token
+  if (isProtectedRoute && !token) {
+    const url = new URL('/login', request.url)  // MUDANÇA AQUI
+    url.searchParams.set('from', pathname)
+    return NextResponse.redirect(url)
+  }
+
+  // Se tentando acessar login/register já logado
+  if (isAuthRoute && token) {
+    return NextResponse.redirect(new URL('/dashboard', request.url))
+  }
+
+  return NextResponse.next()
+}
+
+export const config = {
+  matcher: ['/dashboard/:path*', '/admin/:path*', '/login', '/cadastro']  // MUDANÇA AQUI
+}

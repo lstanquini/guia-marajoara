@@ -2,15 +2,23 @@
 
 import { useState, useEffect, useCallback, Children, ReactNode } from 'react'
 import { cn } from '@/lib/utils'
-import { Button } from '@/components/ui/Button'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 
 interface CarouselProps {
   children: ReactNode[]
   autoplay?: boolean
   autoplayDelay?: number
+  showArrows?: boolean
+  arrowsOutside?: boolean
 }
 
-export function Carousel({ children, autoplay = true, autoplayDelay = 5000 }: CarouselProps) {
+export function Carousel({ 
+  children, 
+  autoplay = true, 
+  autoplayDelay = 5000,
+  showArrows = true,
+  arrowsOutside = false
+}: CarouselProps) {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isPlaying, setIsPlaying] = useState(autoplay)
   const totalSlides = Children.count(children)
@@ -34,7 +42,7 @@ export function Carousel({ children, autoplay = true, autoplayDelay = 5000 }: Ca
 
   return (
     <div
-      className="relative"
+      className={cn("relative", arrowsOutside && "px-12 md:px-16")}
       onMouseEnter={handleInteractionStart}
       onMouseLeave={handleInteractionEnd}
       onFocus={handleInteractionStart}
@@ -55,25 +63,41 @@ export function Carousel({ children, autoplay = true, autoplayDelay = 5000 }: Ca
         </div>
       </div>
 
-      {/* Navigation Arrows */}
-      <Button variant="ghost" size="sm" className="absolute left-4 top-1/2 -translate-y-1/2 rounded-full h-10 w-10 bg-white/80 hover:bg-white" onClick={goToPrev} aria-label="Slide anterior">
-        {'<'}
-      </Button>
-      <Button variant="ghost" size="sm" className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full h-10 w-10 bg-white/80 hover:bg-white" onClick={goToNext} aria-label="Próximo slide">
-        {'>'}
-      </Button>
+      {/* Navigation Arrows - Versão Limpa */}
+      {showArrows && (
+        <>
+          <button
+            onClick={goToPrev}
+            className={cn(
+              "absolute top-1/2 -translate-y-1/2 z-10",
+              "text-gray-700 hover:text-pink-600 transition-colors",
+              "focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-offset-2 rounded-full",
+              "disabled:opacity-30 disabled:cursor-not-allowed",
+              arrowsOutside ? "-left-12 md:-left-16" : "left-2 md:left-4"
+            )}
+            aria-label="Slide anterior"
+            disabled={totalSlides <= 1}
+          >
+            <ChevronLeft className="w-8 h-8 md:w-10 md:h-10 drop-shadow-lg" strokeWidth={2.5} />
+          </button>
+          
+          <button
+            onClick={goToNext}
+            className={cn(
+              "absolute top-1/2 -translate-y-1/2 z-10",
+              "text-gray-700 hover:text-pink-600 transition-colors",
+              "focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-offset-2 rounded-full",
+              "disabled:opacity-30 disabled:cursor-not-allowed",
+              arrowsOutside ? "-right-12 md:-right-16" : "right-2 md:right-4"
+            )}
+            aria-label="Próximo slide"
+            disabled={totalSlides <= 1}
+          >
+            <ChevronRight className="w-8 h-8 md:w-10 md:h-10 drop-shadow-lg" strokeWidth={2.5} />
+          </button>
+        </>
+      )}
 
-      {/* Dots and Play/Pause */}
-      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-4 rounded-full bg-black/20 p-2 backdrop-blur-sm">
-        <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-white" onClick={() => setIsPlaying(!isPlaying)} aria-label={isPlaying ? "Pausar carrossel" : "Iniciar carrossel"}>
-          {isPlaying ? '❚❚' : '▶'}
-        </Button>
-        <div className="flex items-center gap-2">
-          {Array.from({ length: totalSlides }).map((_, index) => (
-            <button key={index} onClick={() => setCurrentIndex(index)} className={cn('h-2 w-2 rounded-full bg-white transition-all', currentIndex === index ? 'opacity-100 w-4' : 'opacity-50 hover:opacity-75')} aria-label={`Ir para o slide ${index + 1}`} />
-          ))}
-        </div>
-      </div>
     </div>
   )
 }

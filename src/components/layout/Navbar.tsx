@@ -4,11 +4,15 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import { MobileMenu } from '@/components/layout/MobileMenu'
+import { useAuth } from '@/contexts/auth-context'
+import { useAdmin } from '@/hooks/useAdmin'
 
 export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const [currentMessage, setCurrentMessage] = useState(0)
+  const { user, signOut } = useAuth()
+  const { isAdmin } = useAdmin()
 
   const messages = [
     '🎉 Novos cupons toda semana!',
@@ -62,8 +66,7 @@ export function Navbar() {
               {[
                 { href: '/', label: 'HOME' },
                 { href: '/busca', label: 'BUSCA' },
-                { href: '/cupons', label: 'CUPONS' },
-                { href: '/destaque', label: 'DESTAQUE' }
+                { href: '/cupons', label: 'CUPONS' }
               ].map((item) => (
                 <li key={item.href} role="menuitem">
                   <Link href={item.href} className="text-[#C2227A] hover:text-[#7CB342] transition-colors font-medium relative group">
@@ -81,11 +84,31 @@ export function Navbar() {
             </ul>
 
             <div className="hidden md:flex items-center gap-4">
-              <Link href="/login" className="p-2 rounded-full hover:bg-gray-100 transition-colors text-[#C2227A]" aria-label="Login">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-              </Link>
+              {user ? (
+                <>
+                  <Link 
+                    href={isAdmin ? "/admin" : "/dashboard"} 
+                    className="p-2 rounded-full hover:bg-gray-100 transition-colors text-[#C2227A]" 
+                    aria-label={isAdmin ? "Painel Admin" : "Dashboard"}
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                  </Link>
+                  <button 
+                    onClick={signOut}
+                    className="text-sm text-gray-600 hover:text-[#C2227A] transition-colors"
+                  >
+                    Sair
+                  </button>
+                </>
+              ) : (
+                <Link href="/login" className="p-2 rounded-full hover:bg-gray-100 transition-colors text-[#C2227A]" aria-label="Login">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                </Link>
+              )}
               
               <div className="h-6 w-px bg-gray-200" />
               

@@ -1,47 +1,15 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Modal } from '@/components/ui/Modal'
-import { Star, MapPin, Phone } from 'lucide-react'
-
-// Interface Business tipada
-interface Business {
-  id: string
-  name: string
-  slug: string
-  description: string
-  category_main: string
-  category_sub?: string
-  phone?: string
-  whatsapp?: string
-  website?: string
-  instagram?: string
-  email?: string
-  address: string
-  address_number?: string
-  neighborhood?: string
-  city: string
-  state: string
-  zip_code?: string
-  latitude?: number
-  longitude?: number
-  opening_hours?: Record<string, string>
-  delivery?: boolean
-  rating?: number
-  total_reviews?: number
-  logo_url?: string
-  banner_url?: string
-  featured_until?: string
-  plan_type: 'basic' | 'premium'
-  status: 'pending' | 'approved' | 'suspended'
-  created_at: string
-  updated_at: string
-}
+import { Star, MapPin, Tag } from 'lucide-react'
+import { capitalizeCategory } from '@/lib/utils'
+import { getCategoryInfo, type BusinessSearchResult, type Category } from '@/lib/services/search'
 
 interface BusinessCardProps {
-  business: Business
+  business: BusinessSearchResult
   variant?: 'default' | 'featured'
 }
 
@@ -49,6 +17,14 @@ export function BusinessCard({ business, variant = 'default' }: BusinessCardProp
   const [modalOpen, setModalOpen] = useState(false)
   const [formData, setFormData] = useState({ name: '', whatsapp: '' })
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [categoryInfo, setCategoryInfo] = useState<Category | null>(null)
+
+  // Buscar informações da categoria
+  useEffect(() => {
+    if (business.category_main) {
+      getCategoryInfo(business.category_main).then(setCategoryInfo)
+    }
+  }, [business.category_main])
 
   const handleSubmit = async () => {
     if (!formData.name || !formData.whatsapp) {
@@ -58,9 +34,7 @@ export function BusinessCard({ business, variant = 'default' }: BusinessCardProp
 
     setIsSubmitting(true)
     
-    // Simular envio - depois integrar com API
     setTimeout(() => {
-      // Aqui você enviaria para sua API
       const phone = business.whatsapp?.replace(/\D/g, '')
       const message = `Olá! Sou ${formData.name}, vi vocês no Guia Marajoara e gostaria de mais informações.`
       
@@ -89,52 +63,38 @@ export function BusinessCard({ business, variant = 'default' }: BusinessCardProp
     return value
   }
 
-  const getCategoryEmoji = (category: string) => {
-    const emojis: Record<string, string> = {
-      restaurante: '🍕',
-      pet: '🐾',
-      fitness: '💪',
-      beleza: '💅',
-      saude: '🏥',
-      vestuario: '👕',
-      imovel: '🏠',
-      doces: '🍰',
-      acessorios: '👜',
-      servicos: '🔧'
-    }
-    return emojis[category] || '🏪'
-  }
-
-  const getCategoryLabel = (category: string) => {
-    const labels: Record<string, string> = {
-      restaurante: 'Restaurante',
-      pet: 'Pet Shop',
-      fitness: 'Fitness',
-      beleza: 'Beleza',
-      saude: 'Saúde',
-      vestuario: 'Vestuário',
-      imovel: 'Imóvel',
-      doces: 'Doces & Bolos',
-      acessorios: 'Acessórios',
-      servicos: 'Serviços'
-    }
-    return labels[category] || category
-  }
+  // Pegar emoji da categoria ou usar padrão
+  const categoryEmoji = categoryInfo?.icon || '🏪'
+  
+  // Pegar nome da categoria ou usar o slug capitalizado
+  const categoryName = categoryInfo?.name || capitalizeCategory(business.category_main)
 
   return (
     <>
       <Card variant={variant === 'featured' ? 'feature' : 'business'}>
         <CardHeader>
           <div className="flex items-start justify-between mb-2">
-            <div className="text-3xl">{getCategoryEmoji(business.category_main)}</div>
-            {business.plan_type === 'premium' && (
-              <span className="bg-gradient-to-r from-[#C2227A] to-[#A01860] text-white text-xs font-semibold px-2 py-1 rounded-full">
-                Premium
-              </span>
-            )}
+            <div className="text-3xl">{business.logo_url || categoryEmoji}</div>
+            <div className="flex flex-col gap-1 items-end">
+              {business.plan_type === 'premium' && (
+                <span className="bg-gradient-to-r from-[#C2227A] to-[#A01860] text-white text-xs font-semibold px-2 py-1 rounded-full">
+                  Premium
+                </span>
+              )}
+              {business.has_active_coupons && (
+                <span className="bg-green-100 text-green-700 text-xs font-semibold px-2 py-1 rounded-full flex items-center gap-1">
+                  <Tag size={12} />
+                  Cupom
+                </span>
+              )}
+            </div>
           </div>
           <CardTitle className="line-clamp-1">{business.name}</CardTitle>
-          <CardDescription>{getCategoryLabel(business.category_main)}</CardDescription>
+          <CardDescription>
+            {business.category_sub 
+              ? capitalizeCategory(business.category_sub) 
+              : categoryName}
+          </CardDescription>
         </CardHeader>
         
         <CardContent>
@@ -166,16 +126,8 @@ export function BusinessCard({ business, variant = 'default' }: BusinessCardProp
               <MapPin size={14} className="mt-0.5 flex-shrink-0" />
               <span className="line-clamp-1">
                 {business.address}
-                {business.address_number && `, ${business.address_number}`}
                 {business.neighborhood && ` - ${business.neighborhood}`}
               </span>
-            </div>
-          )}
-
-          {business.phone && (
-            <div className="flex items-center gap-1 text-xs text-[#6B7280] mt-1">
-              <Phone size={14} />
-              <span>{business.phone}</span>
             </div>
           )}
         </CardContent>
@@ -200,7 +152,6 @@ export function BusinessCard({ business, variant = 'default' }: BusinessCardProp
         </CardFooter>
       </Card>
 
-      {/* Modal para captura de dados */}
       <Modal
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
@@ -208,7 +159,6 @@ export function BusinessCard({ business, variant = 'default' }: BusinessCardProp
         description={`Enviaremos sua mensagem para ${business.name} via WhatsApp.`}
       >
         <div className="space-y-4">
-          {/* Formulário */}
           <div className="space-y-4">
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-[#1A1A1A] mb-1">
@@ -242,7 +192,6 @@ export function BusinessCard({ business, variant = 'default' }: BusinessCardProp
             </div>
           </div>
 
-          {/* Botões */}
           <div className="flex gap-3 pt-2">
             <Button
               variant="ghost"

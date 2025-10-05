@@ -15,3 +15,23 @@ export function formatCurrency(value: number) {
     currency: 'BRL'
   }).format(value)
 }
+
+// ADICIONE ESTA NOVA FUNÇÃO
+export function capitalizeCategory(category: string): string {
+  if (!category) return ''
+  
+  // Palavras que devem ficar em minúsculo
+  const lowercaseWords = ['e', 'de', 'da', 'do', 'das', 'dos', 'com', 'para']
+  
+  return category
+    .toLowerCase()
+    .split(' ')
+    .map((word, index) => {
+      // Primeira palavra sempre capitalizada
+      if (index === 0 || !lowercaseWords.includes(word)) {
+        return word.charAt(0).toUpperCase() + word.slice(1)
+      }
+      return word
+    })
+    .join(' ')
+}

@@ -223,47 +223,47 @@ export function FeaturedSection() {
   const supabase = createClientComponentClient()
 
   useEffect(() => {
-    loadFeaturedBusinesses()
-  }, [])
+    async function loadFeaturedBusinesses() {
+      try {
+        const { data, error } = await supabase
+          .from('featured_businesses')
+          .select(`
+            *,
+            business:businesses(
+              id,
+              name,
+              slug,
+              category_main,
+              category_sub,
+              logo_url,
+              banner_url,
+              rating,
+              total_reviews,
+              neighborhood,
+              city,
+              whatsapp
+            ),
+            coupon:coupons(
+              id,
+              title,
+              discount_text,
+              expires_at
+            )
+          `)
+          .eq('is_active', true)
+          .order('order_index')
 
-  async function loadFeaturedBusinesses() {
-    try {
-      const { data, error } = await supabase
-        .from('featured_businesses')
-        .select(`
-          *,
-          business:businesses(
-            id,
-            name,
-            slug,
-            category_main,
-            category_sub,
-            logo_url,
-            banner_url,
-            rating,
-            total_reviews,
-            neighborhood,
-            city,
-            whatsapp
-          ),
-          coupon:coupons(
-            id,
-            title,
-            discount_text,
-            expires_at
-          )
-        `)
-        .eq('is_active', true)
-        .order('order_index')
-
-      if (error) throw error
-      setFeatured(data || [])
-    } catch (error) {
-      console.error('Erro ao carregar destaques:', error)
-    } finally {
-      setLoading(false)
+        if (error) throw error
+        setFeatured(data || [])
+      } catch (error) {
+        console.error('Erro ao carregar destaques:', error)
+      } finally {
+        setLoading(false)
+      }
     }
-  }
+
+    loadFeaturedBusinesses()
+  }, [supabase])
 
   // Se não tem destaques, não renderiza nada
   if (!loading && featured.length === 0) {

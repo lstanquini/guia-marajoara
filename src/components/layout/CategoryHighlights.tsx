@@ -3,6 +3,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { getIconBySlug } from '@/lib/iconMapping'
 
@@ -48,55 +49,55 @@ export function CategoryHighlights() {
   const supabase = createClientComponentClient()
 
   useEffect(() => {
-    loadCategories()
-  }, [])
+    async function loadCategories() {
+      try {
+        const now = Date.now()
+        if (categoriesCache.data && (now - categoriesCache.timestamp) < CACHE_TTL) {
+          setCategories(categoriesCache.data)
+          setLoading(false)
+          return
+        }
 
-  async function loadCategories() {
-    try {
-      const now = Date.now()
-      if (categoriesCache.data && (now - categoriesCache.timestamp) < CACHE_TTL) {
-        setCategories(categoriesCache.data)
+        const { data: categoriesData, error: catError } = await supabase
+          .from('categories')
+          .select('id, name, slug, icon, image_url, order_index')
+          .order('order_index')
+          .limit(6)
+        if (catError) throw catError
+
+        const { data: businesses } = await supabase
+          .from('businesses')
+          .select('category_main')
+          .eq('status', 'approved')
+
+        const counts: Record<string, number> = {}
+        if (businesses) {
+          businesses.forEach(b => {
+            counts[b.category_main] = (counts[b.category_main] || 0) + 1
+          })
+        }
+
+        const categoriesWithCount = categoriesData?.map(cat => ({
+          ...cat,
+          business_count: counts[cat.slug] || 0
+        })) || []
+
+        categoriesCache = {
+          data: categoriesWithCount,
+          timestamp: now
+        }
+
+        setCategories(categoriesWithCount)
+      } catch (error) {
+        console.error('Erro ao carregar categorias:', error)
+        setCategories([])
+      } finally {
         setLoading(false)
-        return
       }
-
-      const { data: categoriesData, error: catError } = await supabase
-        .from('categories')
-        .select('id, name, slug, icon, image_url, order_index')
-        .order('order_index')
-        .limit(6)
-      if (catError) throw catError
-
-      const { data: businesses } = await supabase
-        .from('businesses')
-        .select('category_main')
-        .eq('status', 'approved')
-
-      const counts: Record<string, number> = {}
-      if (businesses) {
-        businesses.forEach(b => {
-          counts[b.category_main] = (counts[b.category_main] || 0) + 1
-        })
-      }
-
-      const categoriesWithCount = categoriesData?.map(cat => ({
-        ...cat,
-        business_count: counts[cat.slug] || 0
-      })) || []
-
-      categoriesCache = {
-        data: categoriesWithCount,
-        timestamp: now
-      }
-
-      setCategories(categoriesWithCount)
-    } catch (error) {
-      console.error('Erro ao carregar categorias:', error)
-      setCategories([])
-    } finally {
-      setLoading(false)
     }
-  }
+
+    loadCategories()
+  }, [supabase])
 
   const renderIcon = (category: Category) => {
     const LucideIcon = getIconBySlug(category.slug)
@@ -150,10 +151,11 @@ export function CategoryHighlights() {
                 className="group relative rounded-xl sm:rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 aspect-square"
               >
                 {category.image_url ? (
-                  <img 
+                  <Image 
                     src={category.image_url} 
                     alt={category.name}
-                    className="absolute inset-0 w-full h-full object-cover"
+                    fill
+                    className="object-cover"
                   />
                 ) : (
                   <div className={`absolute inset-0 bg-gradient-to-br ${gradient}`} />

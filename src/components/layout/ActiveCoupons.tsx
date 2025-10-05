@@ -165,39 +165,39 @@ export function ActiveCoupons() {
   const supabase = createClientComponentClient()
 
   useEffect(() => {
-    loadCoupons()
-  }, [])
+    async function loadCoupons() {
+      try {
+        const now = new Date().toISOString()
+        
+        const { data, error } = await supabase
+          .from('coupons')
+          .select(`
+            *,
+            business:businesses(
+              id,
+              name,
+              slug,
+              logo_url,
+              category_main,
+              whatsapp
+            )
+          `)
+          .eq('status', 'active')
+          .gte('expires_at', now)
+          .order('created_at', { ascending: false })
+          .limit(15) // Desktop: 15 cupons
 
-  async function loadCoupons() {
-    try {
-      const now = new Date().toISOString()
-      
-      const { data, error } = await supabase
-        .from('coupons')
-        .select(`
-          *,
-          business:businesses(
-            id,
-            name,
-            slug,
-            logo_url,
-            category_main,
-            whatsapp
-          )
-        `)
-        .eq('status', 'active')
-        .gte('expires_at', now)
-        .order('created_at', { ascending: false })
-        .limit(15) // Desktop: 15 cupons
-
-      if (error) throw error
-      setCoupons(data || [])
-    } catch (error) {
-      console.error('Erro ao carregar cupons:', error)
-    } finally {
-      setLoading(false)
+        if (error) throw error
+        setCoupons(data || [])
+      } catch (error) {
+        console.error('Erro ao carregar cupons:', error)
+      } finally {
+        setLoading(false)
+      }
     }
-  }
+    
+    loadCoupons()
+  }, [supabase])
 
   // Loading skeleton
   if (loading) {

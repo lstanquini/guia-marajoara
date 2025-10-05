@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Image from 'next/image'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { AnimatedCounter } from '@/components/ui/AnimatedCounter'
@@ -177,13 +178,14 @@ export function MariCarreiraSection() {
                       />
                     ) : (
                       <>
-                        <img 
+                        <Image 
                           src={settings.video_url && settings.video_thumbnail_url 
                             ? settings.video_thumbnail_url 
                             : settings.photo_url
                           } 
                           alt="Mari Carreira"
-                          className="w-full h-full object-cover"
+                          fill
+                          className="object-cover"
                         />
                         
                         {/* Botão Play - só aparece se tiver vídeo */}

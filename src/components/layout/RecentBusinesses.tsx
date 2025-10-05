@@ -179,47 +179,47 @@ export function RecentBusinesses() {
   const supabase = createClientComponentClient()
 
   useEffect(() => {
-    loadRecentBusinesses()
-  }, [])
+    async function loadRecentBusinesses() {
+      try {
+        // Busca as 9 últimas empresas aprovadas
+        const { data: businessesData, error: bizError } = await supabase
+          .from('businesses')
+          .select('id, name, slug, category_main, category_sub, logo_url, banner_url, rating, address, neighborhood, city, created_at')
+          .eq('status', 'approved')
+          .order('created_at', { ascending: false })
+          .limit(9)
 
-  async function loadRecentBusinesses() {
-    try {
-      // Busca as 9 últimas empresas aprovadas
-      const { data: businessesData, error: bizError } = await supabase
-        .from('businesses')
-        .select('id, name, slug, category_main, category_sub, logo_url, banner_url, rating, address, neighborhood, city, created_at')
-        .eq('status', 'approved')
-        .order('created_at', { ascending: false })
-        .limit(9)
+        if (bizError) throw bizError
 
-      if (bizError) throw bizError
+        // Para cada empresa, verifica se tem cupons ativos
+        const businessesWithCoupons = await Promise.all(
+          (businessesData || []).map(async (business) => {
+            const { data: coupons } = await supabase
+              .from('coupons')
+              .select('id')
+              .eq('business_id', business.id)
+              .eq('status', 'active')
+              .gte('expires_at', new Date().toISOString())
+              .limit(1)
 
-      // Para cada empresa, verifica se tem cupons ativos
-      const businessesWithCoupons = await Promise.all(
-        (businessesData || []).map(async (business) => {
-          const { data: coupons } = await supabase
-            .from('coupons')
-            .select('id')
-            .eq('business_id', business.id)
-            .eq('status', 'active')
-            .gte('expires_at', new Date().toISOString())
-            .limit(1)
+            return {
+              ...business,
+              has_active_coupons: (coupons?.length || 0) > 0
+            }
+          })
+        )
 
-          return {
-            ...business,
-            has_active_coupons: (coupons?.length || 0) > 0
-          }
-        })
-      )
-
-      setBusinesses(businessesWithCoupons)
-    } catch (error) {
-      console.error('Erro ao carregar empresas recentes:', error)
-      setBusinesses([])
-    } finally {
-      setLoading(false)
+        setBusinesses(businessesWithCoupons)
+      } catch (error) {
+        console.error('Erro ao carregar empresas recentes:', error)
+        setBusinesses([])
+      } finally {
+        setLoading(false)
+      }
     }
-  }
+
+    loadRecentBusinesses()
+  }, [supabase])
 
   // Loading skeleton
   if (loading) {

@@ -53,8 +53,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       router.refresh()
       router.push('/dashboard')
       return { success: true }
-    } catch (error: any) {
-      return { success: false, error: error.message }
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido ao fazer login'
+      return { success: false, error: errorMessage }
     }
   }
 
@@ -70,8 +71,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (error) throw error
       return { success: true }
-    } catch (error: any) {
-      return { success: false, error: error.message }
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido ao criar conta'
+      return { success: false, error: errorMessage }
     }
   }
 

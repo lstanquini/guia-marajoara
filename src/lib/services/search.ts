@@ -1,5 +1,14 @@
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 
+// Interface para horários de funcionamento
+export interface OpeningHours {
+  [key: string]: {
+    open: string
+    close: string
+    closed: boolean
+  }
+}
+
 export interface BusinessSearchResult {
   id: string
   name: string
@@ -17,7 +26,7 @@ export interface BusinessSearchResult {
   city: string
   whatsapp: string | null
   delivery: boolean
-  opening_hours: any
+  opening_hours: OpeningHours | null
   has_active_coupons?: boolean
   relevance?: number
 }

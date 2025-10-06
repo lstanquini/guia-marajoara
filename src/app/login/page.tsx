@@ -1,25 +1,50 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/auth-context'
+import { useAdmin } from '@/hooks/useAdmin'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const { signIn } = useAuth()
+  const { signIn, user } = useAuth()
+  const { isAdmin, loading: adminLoading } = useAdmin()
+  const router = useRouter()
+
+  // Redireciona automaticamente após login bem-sucedido
+  useEffect(() => {
+    // Se o usuário está logado e já verificamos se é admin
+    if (user && !adminLoading) {
+      console.log('🔵 Usuário logado, redirecionando...', { isAdmin })
+      
+      if (isAdmin) {
+        router.push('/admin')
+      } else {
+        router.push('/dashboard')
+      }
+    }
+  }, [user, isAdmin, adminLoading, router])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
     setLoading(true)
 
-    const result = await signIn(email, password)
-    
-    if (!result.success) {
-      setError(result.error || 'Erro ao fazer login')
+    try {
+      const result = await signIn(email, password)
+      
+      if (!result.success) {
+        setError(result.error || 'Erro ao fazer login')
+        setLoading(false)
+      }
+      // Se o login foi bem-sucedido, o useEffect acima cuida do redirecionamento
+    } catch (err) {
+      console.error('Erro no login:', err)
+      setError('Erro ao fazer login')
       setLoading(false)
     }
   }

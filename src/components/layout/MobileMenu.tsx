@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
-import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/contexts/auth-context'
@@ -31,9 +30,27 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
 
   const handleTouchEnd = () => {
     if (touchStart - touchEnd > 100) {
-      // Swipe left (fechar)
       onClose()
     }
+  }
+
+  const handleLogout = async () => {
+    console.log('🔴 Logout iniciado no mobile')
+    try {
+      await signOut()
+      console.log('✅ Logout concluído')
+      onClose()
+    } catch (error) {
+      console.error('❌ Erro no logout:', error)
+      onClose()
+    }
+  }
+
+  const handleLogin = (e: React.MouseEvent | React.TouchEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    console.log('🔵 Redirecionando para login')
+    window.location.href = '/login'
   }
 
   useEffect(() => {
@@ -57,12 +74,20 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
   const NavLink = ({ href, icon, label, badge }: { href: string; icon: React.ReactNode; label: string; badge?: string }) => {
     const isActive = pathname === href
     
+    const handleClick = (e: React.MouseEvent) => {
+      e.preventDefault()
+      onClose()
+      setTimeout(() => {
+        window.location.href = href
+      }, 150)
+    }
+    
     return (
-      <Link 
+      <a 
         href={href} 
-        onClick={onClose}
+        onClick={handleClick}
         className={cn(
-          'flex items-center gap-3 px-4 py-3 rounded-lg transition-all group relative',
+          'flex items-center gap-3 px-4 py-3 rounded-lg transition-all group relative cursor-pointer',
           isActive 
             ? 'bg-gradient-to-r from-[#C2227A]/10 to-[#C2227A]/5 text-[#C2227A]' 
             : 'text-gray-700 hover:bg-gray-50 hover:text-[#C2227A]'
@@ -83,7 +108,7 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
         {isActive && (
           <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-[#C2227A] rounded-r-full" />
         )}
-      </Link>
+      </a>
     )
   }
 
@@ -131,7 +156,7 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
           </button>
         </div>
 
-        {/* USER PROFILE (se logado) */}
+        {/* USER PROFILE */}
         {user && (
           <div className="px-5 py-4 bg-gradient-to-br from-gray-50 to-white border-b border-gray-100">
             <div className="flex items-center gap-3">
@@ -156,7 +181,6 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
         {/* NAVIGATION */}
         <nav className="flex-1 overflow-y-auto px-3 py-4">
           <ul className="space-y-1">
-            {/* Navegação Principal */}
             <li>
               <NavLink
                 href="/"
@@ -193,7 +217,6 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
               />
             </li>
 
-            {/* Minha Conta (apenas se logado) */}
             {user && (
               <>
                 <li className="py-2">
@@ -213,42 +236,48 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
                     }
                   />
                 </li>
-                <li>
-                  <NavLink
-                    href="/dashboard/plano"
-                    label="Meu Plano"
-                    icon={
-                      <svg fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-                      </svg>
-                    }
-                  />
-                </li>
+                {!isAdmin && (
+                  <li>
+                    <NavLink
+                      href="/dashboard/plano"
+                      label="Meu Plano"
+                      icon={
+                        <svg fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                        </svg>
+                      }
+                    />
+                  </li>
+                )}
               </>
             )}
 
-            {/* Cadastro (apenas se NÃO logado) */}
             {!user && (
               <>
                 <li className="pt-3">
                   <div className="h-px bg-gray-100 mb-3"></div>
                 </li>
                 <li>
-                  <Link 
+                  <a 
                     href="/cadastro" 
-                    onClick={onClose}
-                    className="flex items-center justify-center gap-2 px-4 py-3.5 bg-gradient-to-r from-[#7CB342] to-[#6A9A38] text-white rounded-lg hover:shadow-lg transition-all font-semibold text-sm"
+                    onClick={(e) => {
+                      e.preventDefault()
+                      onClose()
+                      setTimeout(() => {
+                        window.location.href = '/cadastro'
+                      }, 150)
+                    }}
+                    className="flex items-center justify-center gap-2 px-4 py-3.5 bg-gradient-to-r from-[#7CB342] to-[#6A9A38] text-white rounded-lg hover:shadow-lg transition-all font-semibold text-sm cursor-pointer"
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
                     </svg>
                     Cadastre-se Grátis
-                  </Link>
+                  </a>
                 </li>
               </>
             )}
 
-            {/* Ajuda e Suporte */}
             <li className="py-2">
               <p className="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Suporte</p>
             </li>
@@ -268,15 +297,16 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
 
         {/* FOOTER */}
         <div className="border-t border-gray-100 bg-gray-50">
-          {/* Login/Logout */}
           <div className="px-4 pt-3 pb-2">
             {user ? (
               <button 
-                onClick={() => {
-                  signOut()
-                  onClose()
+                onClick={handleLogout}
+                onTouchEnd={(e) => {
+                  e.preventDefault()
+                  handleLogout()
                 }}
-                className="flex items-center justify-center gap-2 w-full py-2.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors text-sm font-medium"
+                className="flex items-center justify-center gap-2 w-full py-2.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors text-sm font-medium touch-manipulation"
+                style={{ WebkitTapHighlightColor: 'transparent' }}
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
@@ -284,20 +314,20 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
                 Sair
               </button>
             ) : (
-              <Link 
-                href="/login" 
-                onClick={onClose}
-                className="flex items-center justify-center gap-2 w-full py-2.5 text-[#C2227A] hover:bg-pink-50 rounded-lg transition-colors text-sm font-medium"
+              <button
+                onClick={handleLogin}
+                onTouchEnd={handleLogin}
+                className="flex items-center justify-center gap-2 w-full py-2.5 text-[#C2227A] hover:bg-pink-50 rounded-lg transition-colors text-sm font-medium cursor-pointer touch-manipulation"
+                style={{ WebkitTapHighlightColor: 'transparent' }}
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
                 </svg>
                 Entrar
-              </Link>
+              </button>
             )}
           </div>
 
-          {/* Social + Version */}
           <div className="px-4 pb-3">
             <div className="flex items-center justify-center gap-6 py-3 border-t border-gray-200">
               <a 

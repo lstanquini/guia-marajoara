@@ -10,14 +10,13 @@ import {
   ArrowLeft, Plus, Edit2, Trash2, Save, X, AlertCircle, ChevronUp, ChevronDown, 
   Upload, Image as ImageIcon
 } from 'lucide-react'
-// ADICIONADO: Importa a função inteligente do seu arquivo de mapeamento
 import { getIconBySlug } from '@/lib/iconMapping'
 
 interface Category {
   id: string
   name: string
   slug: string
-  icon: string // Emoji de fallback
+  icon: string
   image_url?: string | null
   order_index: number
   created_at: string
@@ -25,7 +24,6 @@ interface Category {
   business_count?: number
 }
 
-// INTERFACE SIMPLIFICADA: Não precisamos mais de icon_lucide ou icon_type
 interface CategoryForm {
   name: string
   slug: string
@@ -50,7 +48,6 @@ export default function AdminCategoriasPage() {
   const [uploadingImage, setUploadingImage] = useState(false)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   
-  // ESTADO SIMPLIFICADO
   const [formData, setFormData] = useState<CategoryForm>({
     name: '',
     slug: '',
@@ -180,7 +177,6 @@ export default function AdminCategoriasPage() {
     setShowEditModal(true)
   }
   
-  // FUNÇÃO SIMPLIFICADA
   async function handleAdd() {
     if (!formData.name || !formData.slug || !formData.icon) {
       alert('Preencha todos os campos obrigatórios')
@@ -210,7 +206,6 @@ export default function AdminCategoriasPage() {
     }
   }
 
-  // FUNÇÃO SIMPLIFICADA
   async function handleEdit() {
     if (!editingCategory || !formData.name || !formData.icon) {
       alert('Preencha todos os campos obrigatórios')
@@ -306,17 +301,39 @@ export default function AdminCategoriasPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <>
+      {/* Header Mobile - Sticky */}
+      <div className="sticky top-0 z-10 bg-white shadow md:hidden">
+        <div className="px-4 py-3">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-3">
+              <Link href="/admin" className="p-2 hover:bg-gray-100 rounded-lg">
+                <ArrowLeft className="w-5 h-5" />
+              </Link>
+              <h1 className="text-lg font-bold text-gray-900">Categorias</h1>
+            </div>
+            <button
+              onClick={openAddModal}
+              className="flex items-center gap-2 px-3 py-2 bg-[#C2227A] text-white rounded-lg hover:bg-[#A01860] text-sm"
+            >
+              <Plus size={18} />
+              <span className="hidden xs:inline">Nova</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Header Desktop */}
+      <div className="hidden md:block bg-white shadow">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="flex justify-between items-center">
             <div className="flex items-center gap-4">
               <Link href="/admin" className="p-2 hover:bg-gray-100 rounded-lg">
                 <ArrowLeft className="w-5 h-5" />
               </Link>
               <div>
-                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Categorias</h1>
-                <p className="text-gray-500 mt-1 text-sm sm:text-base">Gerenciar categorias do sistema</p>
+                <h1 className="text-3xl font-bold text-gray-900">Categorias</h1>
+                <p className="text-gray-500 mt-1">Gerenciar categorias do sistema</p>
               </div>
             </div>
             <button
@@ -330,63 +347,80 @@ export default function AdminCategoriasPage() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 flex items-start gap-3">
-          <AlertCircle className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
-          <div className="text-sm text-blue-800">
-            <p className="font-semibold mb-1">Dica sobre Ícones:</p>
-            <p>O ícone profissional (SVG) é definido automaticamente com base no "slug". Cadastre slugs como "restaurante", "beleza", "petshop" para ver a mágica acontecer!</p>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          {loading ? (
-            <div className="p-8 text-center text-gray-500">Carregando categorias...</div>
-          ) : categories.length === 0 ? (
-            <div className="p-8 text-center text-gray-500">
-              <p>Nenhuma categoria cadastrada</p>
-              <button onClick={openAddModal} className="mt-4 text-[#C2227A] hover:underline">
-                Adicionar primeira categoria
-              </button>
+      {/* Conteúdo */}
+      <div className="min-h-screen bg-gray-50 pb-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
+          
+          {/* Dica sobre Ícones */}
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 md:p-4 mb-4 md:mb-6 flex items-start gap-2 md:gap-3">
+            <AlertCircle className="w-4 h-4 md:w-5 md:h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+            <div className="text-xs md:text-sm text-blue-800">
+              <p className="font-semibold mb-1">Dica sobre Ícones:</p>
+              <p>O ícone profissional (SVG) é definido automaticamente com base no "slug". Cadastre slugs como "restaurante", "beleza", "petshop" para ver a mágica acontecer!</p>
             </div>
-          ) : (
-            <div className="divide-y">
-              {categories.map((category, index) => {
-                // ALTERADO: A mágica acontece aqui! O ícone é buscado pelo slug.
-                const LucideIcon = getIconBySlug(category.slug)
+          </div>
 
-                return (
-                  <div key={category.id} className="p-4 sm:p-6 hover:bg-gray-50">
-                    <div className="flex items-center justify-between gap-4">
-                      <div className="flex items-center gap-4 flex-1">
-                        <div className="flex flex-col gap-1">
-                           <button onClick={() => moveUp(index)} disabled={index === 0 || reordering} className="p-1 hover:bg-gray-200 rounded disabled:opacity-30 disabled:cursor-not-allowed">
-                            <ChevronUp size={16} />
+          {/* Lista de Categorias */}
+          <div className="bg-white rounded-lg shadow overflow-hidden">
+            {loading ? (
+              <div className="p-8 text-center text-gray-500">Carregando categorias...</div>
+            ) : categories.length === 0 ? (
+              <div className="p-8 text-center text-gray-500">
+                <p>Nenhuma categoria cadastrada</p>
+                <button onClick={openAddModal} className="mt-4 text-[#C2227A] hover:underline text-sm">
+                  Adicionar primeira categoria
+                </button>
+              </div>
+            ) : (
+              <div className="divide-y">
+                {categories.map((category, index) => {
+                  const LucideIcon = getIconBySlug(category.slug)
+
+                  return (
+                    <div key={category.id} className="p-3 md:p-6 hover:bg-gray-50">
+                      <div className="flex items-center justify-between gap-2 md:gap-4">
+                        
+                        {/* Botões de Reordenação */}
+                        <div className="flex flex-col gap-0.5 md:gap-1">
+                          <button 
+                            onClick={() => moveUp(index)} 
+                            disabled={index === 0 || reordering} 
+                            className="p-1.5 md:p-1 hover:bg-gray-200 rounded disabled:opacity-30 disabled:cursor-not-allowed"
+                          >
+                            <ChevronUp size={18} className="md:w-4 md:h-4" />
                           </button>
-                          <button onClick={() => moveDown(index)} disabled={index === categories.length - 1 || reordering} className="p-1 hover:bg-gray-200 rounded disabled:opacity-30 disabled:cursor-not-allowed">
-                            <ChevronDown size={16} />
+                          <button 
+                            onClick={() => moveDown(index)} 
+                            disabled={index === categories.length - 1 || reordering} 
+                            className="p-1.5 md:p-1 hover:bg-gray-200 rounded disabled:opacity-30 disabled:cursor-not-allowed"
+                          >
+                            <ChevronDown size={18} className="md:w-4 md:h-4" />
                           </button>
                         </div>
 
-                        <div className="flex-shrink-0 w-12 h-12 flex items-center justify-center">
+                        {/* Ícone/Imagem */}
+                        <div className="flex-shrink-0 w-10 h-10 md:w-12 md:h-12 flex items-center justify-center">
                           {category.image_url ? (
                             <img 
                               src={category.image_url} 
                               alt={category.name}
-                              className="w-12 h-12 rounded-lg object-cover"
+                              className="w-10 h-10 md:w-12 md:h-12 rounded-lg object-cover"
                             />
                           ) : LucideIcon ? (
-                            <div className="w-12 h-12 flex items-center justify-center bg-gray-100 rounded-lg">
-                              <LucideIcon className="w-7 h-7 text-gray-600" />
+                            <div className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center bg-gray-100 rounded-lg">
+                              <LucideIcon className="w-6 h-6 md:w-7 md:h-7 text-gray-600" />
                             </div>
                           ) : (
-                            <span className="text-3xl">{category.icon}</span>
+                            <span className="text-2xl md:text-3xl">{category.icon}</span>
                           )}
                         </div>
 
-                        <div className="flex-1">
-                          <h3 className="font-semibold text-gray-900">{category.name}</h3>
-                          <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-sm text-gray-500 mt-1">
+                        {/* Info */}
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-semibold text-gray-900 text-sm md:text-base truncate">{category.name}</h3>
+                          
+                          {/* Desktop - Todas as infos */}
+                          <div className="hidden md:flex flex-wrap items-center gap-4 text-sm text-gray-500 mt-1">
                             <span>Slug: <code className="bg-gray-100 px-1 rounded">{category.slug}</code></span>
                             <span>Ordem: {category.order_index}</span>
                             <span>
@@ -395,96 +429,172 @@ export default function AdminCategoriasPage() {
                             {category.image_url && <span className="text-green-600">✓ Com imagem</span>}
                             {LucideIcon && <span className="text-purple-600">✓ Ícone SVG</span>}
                           </div>
+
+                          {/* Mobile - Info resumida */}
+                          <div className="md:hidden text-xs text-gray-500 mt-1">
+                            <div className="flex items-center gap-2">
+                              <span>{category.business_count || 0} empresa{(category.business_count || 0) !== 1 ? 's' : ''}</span>
+                              {category.image_url && <span className="text-green-600">✓ Img</span>}
+                              {LucideIcon && <span className="text-purple-600">✓ SVG</span>}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Botões de Ação */}
+                        <div className="flex items-center gap-1 md:gap-2">
+                          <button 
+                            onClick={() => openEditModal(category)} 
+                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg" 
+                            title="Editar"
+                          >
+                            <Edit2 size={16} className="md:w-[18px] md:h-[18px]" />
+                          </button>
+                          <button 
+                            onClick={() => handleDelete(category)} 
+                            disabled={!!category.business_count && category.business_count > 0} 
+                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed" 
+                            title={category.business_count && category.business_count > 0 ? 'Categoria com empresas não pode ser excluída' : 'Excluir'}
+                          >
+                            <Trash2 size={16} className="md:w-[18px] md:h-[18px]" />
+                          </button>
                         </div>
                       </div>
-
-                      <div className="flex items-center gap-2">
-                         <button onClick={() => openEditModal(category)} className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg" title="Editar">
-                          <Edit2 size={18} />
-                        </button>
-                        <button onClick={() => handleDelete(category)} disabled={!!category.business_count && category.business_count > 0} className="p-2 text-red-600 hover:bg-red-50 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed" title={category.business_count && category.business_count > 0 ? 'Categoria com empresas não pode ser excluída' : 'Excluir'}>
-                          <Trash2 size={18} />
-                        </button>
-                      </div>
                     </div>
-                  </div>
-                )
-              })}
-            </div>
-          )}
+                  )
+                })}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* MODAL SIMPLIFICADO */}
+      {/* Modal */}
       {(showAddModal || showEditModal) && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-md w-full p-6 max-h-[90vh] overflow-y-auto">
-            <h2 className="text-xl font-bold mb-4">
+          <div className="bg-white rounded-lg max-w-md w-full p-4 md:p-6 max-h-[90vh] overflow-y-auto">
+            <h2 className="text-lg md:text-xl font-bold mb-4">
               {showAddModal ? 'Nova Categoria' : 'Editar Categoria'}
             </h2>
 
-            <div className="space-y-4">
+            <div className="space-y-3 md:space-y-4">
+              
+              {/* Nome */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Nome da Categoria</label>
-                <input type="text" value={formData.name} onChange={(e) => { setFormData({ ...formData, name: e.target.value, ...(showAddModal ? { slug: generateSlug(e.target.value) } : {}) }) }} placeholder="Ex: Restaurantes" className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C2227A] focus:border-transparent"/>
+                <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">Nome da Categoria</label>
+                <input 
+                  type="text" 
+                  value={formData.name} 
+                  onChange={(e) => { 
+                    setFormData({ 
+                      ...formData, 
+                      name: e.target.value, 
+                      ...(showAddModal ? { slug: generateSlug(e.target.value) } : {}) 
+                    }) 
+                  }} 
+                  placeholder="Ex: Restaurantes" 
+                  className="w-full px-3 md:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C2227A] focus:border-transparent text-sm md:text-base"
+                />
               </div>
 
+              {/* Slug */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Slug (identificador único)</label>
-                <input type="text" value={formData.slug} onChange={(e) => showAddModal && setFormData({ ...formData, slug: e.target.value.toLowerCase() })} disabled={showEditModal} placeholder="Ex: restaurantes" className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C2227A] focus:border-transparent font-mono text-sm disabled:bg-gray-50"/>
+                <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">Slug (identificador único)</label>
+                <input 
+                  type="text" 
+                  value={formData.slug} 
+                  onChange={(e) => showAddModal && setFormData({ ...formData, slug: e.target.value.toLowerCase() })} 
+                  disabled={showEditModal} 
+                  placeholder="Ex: restaurantes" 
+                  className="w-full px-3 md:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C2227A] focus:border-transparent font-mono text-xs md:text-sm disabled:bg-gray-50"
+                />
                 {showAddModal && <p className="text-xs text-gray-500 mt-1">Gerado automaticamente. Use slugs como "beleza", "petshop", "academia".</p>}
               </div>
               
-              {/* NOVO: Preview do ícone automático */}
+              {/* Preview do Ícone */}
               {formData.slug && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Preview do Ícone</label>
+                  <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">Preview do Ícone</label>
                   <div className="bg-gray-50 rounded-lg p-3 flex items-center justify-center gap-3">
                     {(() => {
                       const LucideIcon = getIconBySlug(formData.slug);
                       if (LucideIcon) {
                         return (
                           <>
-                            <LucideIcon className="w-8 h-8 text-gray-700" />
-                            <span className="text-sm text-green-600 font-medium">Ícone "{formData.slug}" encontrado!</span>
+                            <LucideIcon className="w-7 h-7 md:w-8 md:h-8 text-gray-700" />
+                            <span className="text-xs md:text-sm text-green-600 font-medium">Ícone "{formData.slug}" encontrado!</span>
                           </>
                         );
                       }
                       return (
-                        <p className="text-sm text-gray-500">Nenhum ícone SVG para "{formData.slug}". Usará o emoji.</p>
+                        <p className="text-xs md:text-sm text-gray-500">Nenhum ícone SVG para "{formData.slug}". Usará o emoji.</p>
                       );
                     })()}
                   </div>
                 </div>
               )}
               
+              {/* Emoji */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">
                   Ícone Emoji (alternativa)
                 </label>
-                <input type="text" value={formData.icon} onChange={(e) => setFormData({ ...formData, icon: e.target.value })} placeholder="Ex: 🍕" maxLength={2} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C2227A] focus:border-transparent text-2xl text-center"/>
+                <input 
+                  type="text" 
+                  value={formData.icon} 
+                  onChange={(e) => setFormData({ ...formData, icon: e.target.value })} 
+                  placeholder="Ex: 🍕" 
+                  maxLength={2} 
+                  className="w-full px-3 md:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C2227A] focus:border-transparent text-xl md:text-2xl text-center"
+                />
                 <p className="text-xs text-gray-500 mt-1">
                   Usado como alternativa se o slug não corresponder a nenhum ícone SVG.
                 </p>
               </div>
 
+              {/* Upload de Imagem */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Imagem da Categoria (opcional)</label>
+                <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">Imagem da Categoria (opcional)</label>
                 {imagePreview && (
                   <div className="mb-3 relative">
-                    <img src={imagePreview} alt="Preview" className="w-full h-32 object-cover rounded-lg"/>
-                    <button type="button" onClick={() => { setImagePreview(null); setFormData({ ...formData, image_url: null })}} className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600">
-                      <X size={16} />
+                    <img src={imagePreview} alt="Preview" className="w-full h-28 md:h-32 object-cover rounded-lg"/>
+                    <button 
+                      type="button" 
+                      onClick={() => { 
+                        setImagePreview(null); 
+                        setFormData({ ...formData, image_url: null })
+                      }} 
+                      className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
+                    >
+                      <X size={14} className="md:w-4 md:h-4" />
                     </button>
                   </div>
                 )}
                 <div className="relative">
-                  <input type="file" accept="image/*" onChange={(e) => { const file = e.target.files?.[0]; if (file) handleImageUpload(file) }} className="hidden" id="image-upload" disabled={uploadingImage}/>
-                  <label htmlFor="image-upload" className={`flex items-center justify-center gap-2 w-full px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-[#C2227A] transition-colors ${uploadingImage ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                  <input 
+                    type="file" 
+                    accept="image/*" 
+                    onChange={(e) => { 
+                      const file = e.target.files?.[0]; 
+                      if (file) handleImageUpload(file) 
+                    }} 
+                    className="hidden" 
+                    id="image-upload" 
+                    disabled={uploadingImage}
+                  />
+                  <label 
+                    htmlFor="image-upload" 
+                    className={`flex items-center justify-center gap-2 w-full px-3 md:px-4 py-2.5 md:py-3 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-[#C2227A] transition-colors ${uploadingImage ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  >
                     {uploadingImage ? (
-                      <><span className="animate-spin h-5 w-5 border-2 border-[#C2227A] border-t-transparent rounded-full"></span><span className="text-sm text-gray-600">Enviando...</span></>
+                      <>
+                        <span className="animate-spin h-4 w-4 md:h-5 md:w-5 border-2 border-[#C2227A] border-t-transparent rounded-full"></span>
+                        <span className="text-xs md:text-sm text-gray-600">Enviando...</span>
+                      </>
                     ) : (
-                      <><Upload size={20} className="text-gray-400" /><span className="text-sm text-gray-600">{imagePreview ? 'Trocar imagem' : 'Escolher imagem'}</span></>
+                      <>
+                        <Upload size={18} className="text-gray-400 md:w-5 md:h-5" />
+                        <span className="text-xs md:text-sm text-gray-600">{imagePreview ? 'Trocar imagem' : 'Escolher imagem'}</span>
+                      </>
                     )}
                   </label>
                 </div>
@@ -492,17 +602,29 @@ export default function AdminCategoriasPage() {
               </div>
             </div>
 
-            <div className="flex gap-3 mt-6">
-              <button onClick={() => { showAddModal ? setShowAddModal(false) : setShowEditModal(false); setImagePreview(null) }} disabled={saving || uploadingImage} className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50">
+            {/* Botões */}
+            <div className="flex flex-col sm:flex-row gap-2 md:gap-3 mt-4 md:mt-6">
+              <button 
+                onClick={() => { 
+                  showAddModal ? setShowAddModal(false) : setShowEditModal(false); 
+                  setImagePreview(null) 
+                }} 
+                disabled={saving || uploadingImage} 
+                className="flex-1 px-4 py-2 md:py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 text-sm md:text-base"
+              >
                 Cancelar
               </button>
-              <button onClick={showAddModal ? handleAdd : handleEdit} disabled={saving || uploadingImage} className="flex-1 px-4 py-2 bg-[#C2227A] text-white rounded-lg hover:bg-[#A01860] disabled:opacity-50">
+              <button 
+                onClick={showAddModal ? handleAdd : handleEdit} 
+                disabled={saving || uploadingImage} 
+                className="flex-1 px-4 py-2 md:py-2.5 bg-[#C2227A] text-white rounded-lg hover:bg-[#A01860] disabled:opacity-50 text-sm md:text-base font-semibold"
+              >
                 {saving ? 'Salvando...' : showAddModal ? 'Adicionar' : 'Salvar'}
               </button>
             </div>
           </div>
         </div>
       )}
-    </div>
+    </>
   )
 }

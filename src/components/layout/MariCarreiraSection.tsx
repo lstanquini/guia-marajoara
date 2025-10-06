@@ -80,12 +80,25 @@ export function MariCarreiraSection() {
       <div className="absolute bottom-0 left-0 w-96 h-96 bg-purple-200/20 rounded-full blur-3xl pointer-events-none" aria-hidden="true" />
       
       <div className="container relative z-10 mx-auto max-w-7xl px-4">
+        {/* Título Mobile - Aparece antes do celular */}
+        <div className="md:hidden text-center mb-6">
+          <h2 
+            id="mari-title" 
+            className="text-3xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-[#C2227A] to-pink-600"
+          >
+            MARI CARREIRA
+          </h2>
+          <p className="mt-2 text-base font-bold text-gray-600">
+            @JARDIMMARAJOARASP
+          </p>
+        </div>
+
         <div className="grid grid-cols-1 items-center gap-8 md:grid-cols-2 md:gap-12">
           
           {/* COLUNA ESQUERDA - Conteúdo */}
           <div className="flex flex-col gap-6 order-2 md:order-1">
-            {/* Título */}
-            <div>
+            {/* Título Desktop */}
+            <div className="hidden md:block">
               <h2 
                 id="mari-title" 
                 className="text-4xl md:text-5xl lg:text-6xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-[#C2227A] to-pink-600"
@@ -98,30 +111,30 @@ export function MariCarreiraSection() {
             </div>
             
             {/* Cards de estatísticas */}
-            <div className="grid grid-cols-3 gap-3">
-              <Card className="bg-white/80 backdrop-blur-sm p-4 text-center hover:scale-105 transition-transform border border-pink-100">
-                <div className="text-2xl md:text-3xl font-black text-[#C2227A]">
+            <div className="grid grid-cols-3 gap-2 md:gap-3">
+              <Card className="bg-white/80 backdrop-blur-sm p-3 md:p-4 text-center hover:scale-105 transition-transform border border-pink-100">
+                <div className="text-xl sm:text-2xl md:text-3xl font-black text-[#C2227A] leading-tight">
                   +<AnimatedCounter value={settings.followers_count} />
                 </div>
-                <p className="text-xs font-bold uppercase tracking-wider text-gray-600 mt-1">
+                <p className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-gray-600 mt-1 line-clamp-2 leading-tight">
                   {settings.followers_label}
                 </p>
               </Card>
               
-              <Card className="bg-white/80 backdrop-blur-sm p-4 text-center hover:scale-105 transition-transform border border-pink-100">
-                <div className="text-2xl md:text-3xl font-black text-[#C2227A]">
+              <Card className="bg-white/80 backdrop-blur-sm p-3 md:p-4 text-center hover:scale-105 transition-transform border border-pink-100">
+                <div className="text-xl sm:text-2xl md:text-3xl font-black text-[#C2227A] leading-tight">
                   <AnimatedCounter value={settings.partners_count} />
                 </div>
-                <p className="text-xs font-bold uppercase tracking-wider text-gray-600 mt-1">
+                <p className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-gray-600 mt-1 line-clamp-2 leading-tight">
                   {settings.partners_label}
                 </p>
               </Card>
               
-              <Card className="bg-white/80 backdrop-blur-sm p-4 text-center hover:scale-105 transition-transform border border-pink-100">
-                <div className="text-2xl md:text-3xl font-black text-[#C2227A]">
+              <Card className="bg-white/80 backdrop-blur-sm p-3 md:p-4 text-center hover:scale-105 transition-transform border border-pink-100">
+                <div className="text-xl sm:text-2xl md:text-3xl font-black text-[#C2227A] leading-tight">
                   <AnimatedCounter value={settings.active_since} />
                 </div>
-                <p className="text-xs font-bold uppercase tracking-wider text-gray-600 mt-1">
+                <p className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-gray-600 mt-1 line-clamp-2 leading-tight">
                   {settings.active_since_label}
                 </p>
               </Card>

@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { usePartner } from '@/hooks/usePartner'
 import { useToast } from '@/contexts/toast-context'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { ArrowLeft } from 'lucide-react'
 
 export default function NovoCupomPage() {
   const { partner } = usePartner()
@@ -110,43 +111,241 @@ export default function NovoCupomPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="bg-white shadow">
+    <>
+      {/* Header Mobile - Sticky */}
+      <div className="sticky top-0 z-10 bg-white shadow md:hidden">
+        <div className="px-4 py-3">
+          <div className="flex items-center gap-3 mb-2">
+            <button onClick={() => router.back()} className="p-2 hover:bg-gray-100 rounded-lg">
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+            <h1 className="text-lg font-bold">Criar Novo Cupom</h1>
+          </div>
+        </div>
+      </div>
+
+      {/* Header Desktop */}
+      <div className="hidden md:block bg-white shadow">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <Link href="/dashboard/cupons" className="text-sm text-gray-500 hover:text-gray-700 mb-2 inline-block">← Voltar aos Cupons</Link>
+          <Link href="/dashboard/cupons" className="text-sm text-gray-500 hover:text-gray-700 mb-2 inline-block">
+            ← Voltar aos Cupons
+          </Link>
           <h1 className="text-2xl font-bold">Criar Novo Cupom</h1>
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow p-6">
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">Imagem do Cupom * <span className="text-xs text-gray-500">(Tamanho recomendado: 1080x1080px)</span></label>
-            {imagePreview ? (
-              <div className="relative"><img src={imagePreview} alt="Preview" className="w-full max-w-md rounded-lg" /><button type="button" onClick={() => { setImagePreview(null); setImageFile(null); }} className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full hover:bg-red-600">✕</button></div>
-            ) : (
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-12 text-center"><input type="file" accept="image/*" onChange={handleImageChange} className="hidden" id="image-upload" /><label htmlFor="image-upload" className="cursor-pointer flex flex-col items-center"><div className="text-4xl mb-2">📸</div><p className="text-sm text-gray-600">Clique para fazer upload da imagem</p><p className="text-xs text-gray-400 mt-1">PNG, JPG até 5MB</p></label></div>
-            )}
-          </div>
+      {/* Formulário */}
+      <div className="min-h-screen bg-gray-50 pb-20 md:pb-8">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
+          <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow p-4 md:p-6 space-y-4 md:space-y-6">
+            
+            {/* Upload de Imagem */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Imagem do Cupom * 
+                <span className="text-xs text-gray-500 ml-1">(Tamanho recomendado: 1080x1080px)</span>
+              </label>
+              
+              {imagePreview ? (
+                <div className="relative">
+                  <img 
+                    src={imagePreview} 
+                    alt="Preview" 
+                    className="w-full md:max-w-md rounded-lg" 
+                  />
+                  <button 
+                    type="button" 
+                    onClick={() => { setImagePreview(null); setImageFile(null); }} 
+                    className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full hover:bg-red-600"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ) : (
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 md:p-12 text-center">
+                  <input 
+                    type="file" 
+                    accept="image/*" 
+                    onChange={handleImageChange} 
+                    className="hidden" 
+                    id="image-upload" 
+                  />
+                  <label htmlFor="image-upload" className="cursor-pointer flex flex-col items-center">
+                    <div className="text-4xl mb-2">📸</div>
+                    <p className="text-sm text-gray-600">Clique para fazer upload da imagem</p>
+                    <p className="text-xs text-gray-400 mt-1">PNG, JPG até 5MB</p>
+                  </label>
+                </div>
+              )}
+            </div>
 
-          <div className="mb-4"><label className="block text-sm font-medium text-gray-700 mb-2">Título do Cupom *</label><input type="text" required value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} placeholder="Ex: 20% OFF em Pizzas" className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C2227A]" /></div>
+            {/* Título */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Título do Cupom *
+              </label>
+              <input 
+                type="text" 
+                required 
+                value={formData.title} 
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })} 
+                placeholder="Ex: 20% OFF em Pizzas" 
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C2227A]" 
+              />
+            </div>
 
-          <div className="mb-4"><label className="block text-sm font-medium text-gray-700 mb-2">Descrição</label><textarea value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} placeholder="Detalhes do cupom, condições de uso, etc." rows={3} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C2227A]" /></div>
+            {/* Descrição */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Descrição
+              </label>
+              <textarea 
+                value={formData.description} 
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })} 
+                placeholder="Detalhes do cupom, condições de uso, etc." 
+                rows={3} 
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C2227A]" 
+              />
+            </div>
 
-          <div className="mb-4"><label className="block text-sm font-medium text-gray-700 mb-2">Texto do Desconto</label><input type="text" value={formData.discount_text} onChange={(e) => setFormData({ ...formData, discount_text: e.target.value })} placeholder="Ex: 20% OFF" className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C2227A]" /></div>
+            {/* Texto do Desconto */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Texto do Desconto
+              </label>
+              <input 
+                type="text" 
+                value={formData.discount_text} 
+                onChange={(e) => setFormData({ ...formData, discount_text: e.target.value })} 
+                placeholder="Ex: 20% OFF" 
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C2227A]" 
+              />
+            </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-            <div><label className="block text-sm font-medium text-gray-700 mb-2">Data de Início *</label><input type="date" required value={formData.starts_at} onChange={(e) => setFormData({ ...formData, starts_at: e.target.value })} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C2227A]" /></div>
-            <div><label className="block text-sm font-medium text-gray-700 mb-2">Data de Expiração *</label><input type="date" required value={formData.expires_at} onChange={(e) => setFormData({ ...formData, expires_at: e.target.value })} min={formData.starts_at || new Date().toISOString().split('T')[0]} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C2227A]" /></div>
-          </div>
+            {/* Datas - Mobile: Empilhadas | Desktop: Lado a Lado */}
+            <div className="space-y-4 md:space-y-0 md:grid md:grid-cols-2 md:gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Data de Início *
+                </label>
+                <input 
+                  type="date" 
+                  required 
+                  value={formData.starts_at} 
+                  onChange={(e) => setFormData({ ...formData, starts_at: e.target.value })} 
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C2227A]" 
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Data de Expiração *
+                </label>
+                <input 
+                  type="date" 
+                  required 
+                  value={formData.expires_at} 
+                  onChange={(e) => setFormData({ ...formData, expires_at: e.target.value })} 
+                  min={formData.starts_at || new Date().toISOString().split('T')[0]} 
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C2227A]" 
+                />
+              </div>
+            </div>
 
-          <div className="mb-4"><label className="block text-sm font-medium text-gray-700 mb-2">Limite de Resgates</label><div className="space-y-3"><label className="flex items-center"><input type="radio" checked={formData.is_unlimited} onChange={() => setFormData({ ...formData, is_unlimited: true })} className="mr-2" /><span>Ilimitado (sem limite de resgates)</span></label><label className="flex items-center"><input type="radio" checked={!formData.is_unlimited} onChange={() => setFormData({ ...formData, is_unlimited: false })} className="mr-2" /><span>Limitar número de resgates</span></label>{!formData.is_unlimited && <input type="number" min="1" required={!formData.is_unlimited} value={formData.max_redemptions} onChange={(e) => setFormData({ ...formData, max_redemptions: parseInt(e.target.value) })} placeholder="Quantidade máxima de resgates" className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C2227A] mt-2" />}</div></div>
+            {/* Limite de Resgates */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Limite de Resgates
+              </label>
+              <div className="space-y-3">
+                <label className="flex items-center">
+                  <input 
+                    type="radio" 
+                    checked={formData.is_unlimited} 
+                    onChange={() => setFormData({ ...formData, is_unlimited: true })} 
+                    className="mr-2" 
+                  />
+                  <span className="text-sm md:text-base">Ilimitado (sem limite de resgates)</span>
+                </label>
+                
+                <label className="flex items-center">
+                  <input 
+                    type="radio" 
+                    checked={!formData.is_unlimited} 
+                    onChange={() => setFormData({ ...formData, is_unlimited: false })} 
+                    className="mr-2" 
+                  />
+                  <span className="text-sm md:text-base">Limitar número de resgates</span>
+                </label>
+                
+                {!formData.is_unlimited && (
+                  <input 
+                    type="number" 
+                    min="1" 
+                    required={!formData.is_unlimited} 
+                    value={formData.max_redemptions} 
+                    onChange={(e) => setFormData({ ...formData, max_redemptions: parseInt(e.target.value) })} 
+                    placeholder="Quantidade máxima de resgates" 
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C2227A] mt-2" 
+                  />
+                )}
+              </div>
+            </div>
 
-          <div className="mb-6"><label className="block text-sm font-medium text-gray-700 mb-2">Texto de Validade (opcional)</label><input type="text" value={formData.validity_text} onChange={(e) => setFormData({ ...formData, validity_text: e.target.value })} placeholder="Ex: Válido de segunda a sexta" className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C2227A]" /></div>
+            {/* Texto de Validade */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Texto de Validade (opcional)
+              </label>
+              <input 
+                type="text" 
+                value={formData.validity_text} 
+                onChange={(e) => setFormData({ ...formData, validity_text: e.target.value })} 
+                placeholder="Ex: Válido de segunda a sexta" 
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C2227A]" 
+              />
+            </div>
 
-          <div className="flex gap-4"><button type="button" onClick={() => router.back()} className="flex-1 px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50" disabled={loading}>Cancelar</button><button type="submit" disabled={loading || !imageFile} className="flex-1 px-6 py-3 bg-[#C2227A] text-white rounded-lg hover:bg-[#A01860] disabled:opacity-50 disabled:cursor-not-allowed">{loading ? 'Criando...' : 'Criar Cupom'}</button></div>
-        </form>
+            {/* Botões Mobile - Empilhados */}
+            <div className="flex flex-col gap-3 md:hidden">
+              <button 
+                type="button" 
+                onClick={() => router.back()} 
+                className="w-full px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50" 
+                disabled={loading}
+              >
+                Cancelar
+              </button>
+              <button 
+                type="submit" 
+                disabled={loading || !imageFile} 
+                className="w-full px-6 py-3 bg-[#C2227A] text-white rounded-lg hover:bg-[#A01860] disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
+              >
+                {loading ? 'Criando...' : 'Criar Cupom'}
+              </button>
+            </div>
+
+            {/* Botões Desktop - Lado a Lado */}
+            <div className="hidden md:flex gap-4">
+              <button 
+                type="button" 
+                onClick={() => router.back()} 
+                className="flex-1 px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50" 
+                disabled={loading}
+              >
+                Cancelar
+              </button>
+              <button 
+                type="submit" 
+                disabled={loading || !imageFile} 
+                className="flex-1 px-6 py-3 bg-[#C2227A] text-white rounded-lg hover:bg-[#A01860] disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
+              >
+                {loading ? 'Criando...' : 'Criar Cupom'}
+              </button>
+            </div>
+
+          </form>
+        </div>
       </div>
-    </div>
+    </>
   )
 }

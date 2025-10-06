@@ -46,19 +46,15 @@ function CouponCard({ coupon }: { coupon: Coupon }) {
   
   async function handleCouponClick() {
     try {
-      // Incrementar visualizações
       await supabase.rpc('increment_coupon_views', { coupon_id: coupon.id })
-      
-      // Registrar resgate completo (incrementa redemptions_count + salva histórico)
       await supabase.rpc('register_coupon_redemption', {
         p_coupon_id: coupon.id,
-        p_user_name: null, // Opcional: pode coletar depois
-        p_whatsapp_hash: null, // Hash do telefone (LGPD)
-        p_ip_hash: null, // Hash do IP
+        p_user_name: null,
+        p_whatsapp_hash: null,
+        p_ip_hash: null,
         p_user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null
       })
       
-      // Abrir WhatsApp
       const whatsapp = coupon.business?.whatsapp || ''
       if (whatsapp) {
         const message = `Olá! Vi o cupom "${coupon.title}" no Guia Marajoara e gostaria de usá-lo.`
@@ -67,7 +63,6 @@ function CouponCard({ coupon }: { coupon: Coupon }) {
       }
     } catch (error) {
       console.error('Erro ao registrar cupom:', error)
-      // Mesmo com erro, abre o WhatsApp (não bloqueia o usuário)
       const whatsapp = coupon.business?.whatsapp || ''
       if (whatsapp) {
         const message = `Olá! Vi o cupom "${coupon.title}" no Guia Marajoara e gostaria de usá-lo.`
@@ -98,8 +93,8 @@ function CouponCard({ coupon }: { coupon: Coupon }) {
           </div>
         )}
         
-        {/* Overlay no hover */}
-        <div className="absolute inset-0 bg-black/80 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center p-4 text-white text-center">
+        {/* Overlay no hover (desktop only) */}
+        <div className="hidden md:flex absolute inset-0 bg-black/80 opacity-0 group-hover:opacity-100 transition-opacity flex-col items-center justify-center p-4 text-white text-center">
           <div className="mb-3">
             {logoUrl ? (
               <div className="w-12 h-12 rounded-lg bg-white flex items-center justify-center mx-auto mb-3">
@@ -185,7 +180,7 @@ export function ActiveCoupons() {
           .eq('status', 'active')
           .gte('expires_at', now)
           .order('created_at', { ascending: false })
-          .limit(15) // Desktop: 15 cupons
+          .limit(20)
 
         if (error) throw error
         setCoupons(data || [])
@@ -204,17 +199,17 @@ export function ActiveCoupons() {
     return (
       <section className="bg-gray-50 py-12 md:py-16">
         <div className="container mx-auto px-4">
-          <div className="mb-10 text-center">
-            <h2 className="text-3xl font-bold tracking-tighter text-gray-800 md:text-4xl">
+          <div className="mb-8 md:mb-10 text-center">
+            <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold tracking-tighter text-gray-800">
               Cupons Ativos
             </h2>
-            <p className="mt-3 text-lg text-gray-500">
+            <p className="mt-2 md:mt-3 text-base md:text-lg text-gray-500">
               Economize agora com descontos exclusivos dos parceiros
             </p>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-            {[...Array(10)].map((_, i) => (
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3 md:gap-4">
+            {[...Array(8)].map((_, i) => (
               <div key={i} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden animate-pulse">
                 <div className="aspect-square bg-gray-200" />
                 <div className="p-3">
@@ -234,37 +229,37 @@ export function ActiveCoupons() {
     return null
   }
 
-  // Mobile: Agrupa em slides de 4 (2x2) - limite de 12 cupons
-  const mobileSlides = []
-  const mobileCoupons = coupons.slice(0, 12)
-  for (let i = 0; i < mobileCoupons.length; i += 4) {
-    mobileSlides.push(mobileCoupons.slice(i, i + 4))
-  }
-
-  // Desktop: Agrupa em slides de 5 - até 15 cupons
+  // Desktop: Agrupa em slides de 5
   const desktopSlides = []
   const desktopCoupons = coupons.slice(0, 15)
   for (let i = 0; i < desktopCoupons.length; i += 5) {
     desktopSlides.push(desktopCoupons.slice(i, i + 5))
   }
 
+  // Mobile: Agrupa em slides de 4 (2x2)
+  const mobileSlides = []
+  const mobileCoupons = coupons.slice(0, 12)
+  for (let i = 0; i < mobileCoupons.length; i += 4) {
+    mobileSlides.push(mobileCoupons.slice(i, i + 4))
+  }
+
   return (
     <section className="bg-gray-50 py-12 md:py-16">
       <div className="container mx-auto px-4">
-        <div className="mb-10 text-center">
-          <h2 className="text-3xl font-bold tracking-tighter text-gray-800 md:text-4xl">
+        <div className="mb-8 md:mb-10 text-center">
+          <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold tracking-tighter text-gray-800">
             Cupons Ativos
           </h2>
-          <p className="mt-3 text-lg text-gray-500">
+          <p className="mt-2 md:mt-3 text-base md:text-lg text-gray-500">
             Economize agora com descontos exclusivos dos parceiros
           </p>
         </div>
 
-        {/* Mobile: 4 cards por slide (2x2) */}
-        <div className="md:hidden">
-          <Carousel arrowsOutside={true} autoplay={false}>
+        {/* Mobile: Carrossel 2x2 com swipe */}
+        <div className="md:hidden -mx-4">
+          <Carousel arrowsOutside={false} autoplay={false}>
             {mobileSlides.map((slide, slideIndex) => (
-              <div key={slideIndex} className="w-full px-2">
+              <div key={slideIndex} className="px-4">
                 <div className="grid grid-cols-2 gap-3">
                   {slide.map((coupon) => (
                     <CouponCard key={coupon.id} coupon={coupon} />
@@ -273,9 +268,22 @@ export function ActiveCoupons() {
               </div>
             ))}
           </Carousel>
+
+          {/* Botão Ver Todos - Mobile */}
+          <div className="mt-6 text-center">
+            <Link 
+              href="/cupons"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-[#C2227A] text-white rounded-xl font-semibold hover:bg-[#A01860] transition-colors"
+            >
+              Ver Todos os Cupons
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </Link>
+          </div>
         </div>
 
-        {/* Desktop: 5 cards por slide */}
+        {/* Desktop: Carrossel 5 por slide */}
         <div className="hidden md:block">
           <Carousel arrowsOutside={true} autoplay={false}>
             {desktopSlides.map((slide, slideIndex) => (
@@ -288,19 +296,19 @@ export function ActiveCoupons() {
               </div>
             ))}
           </Carousel>
-        </div>
 
-        {/* Link para ver todos */}
-        <div className="mt-8 text-center">
-          <Link 
-            href="/cupons"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-[#C2227A] text-white rounded-xl font-semibold hover:bg-[#A01860] transition-colors"
-          >
-            Ver Todos os Cupons
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </Link>
+          {/* Botão Ver Todos - Desktop */}
+          <div className="mt-8 text-center">
+            <Link 
+              href="/cupons"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-[#C2227A] text-white rounded-xl font-semibold hover:bg-[#A01860] transition-colors"
+            >
+              Ver Todos os Cupons
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </Link>
+          </div>
         </div>
       </div>
     </section>

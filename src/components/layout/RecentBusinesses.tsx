@@ -87,11 +87,11 @@ function BusinessCard({ business }: { business: Business }) {
   
   return (
     <Link
-      href={`/empresa/${business.slug}`}
+      href={`/empresas/${business.slug}`}
       className="group bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100 h-full flex flex-col"
     >
-      {/* Banner da empresa */}
-      <div className={`relative h-48 flex-shrink-0 ${
+      {/* Banner da empresa - maior no mobile */}
+      <div className={`relative h-56 md:h-48 flex-shrink-0 ${
         !bannerUrl ? generateGradient(business.slug) : 'bg-gray-200'
       }`}>
         {bannerUrl && (
@@ -105,7 +105,7 @@ function BusinessCard({ business }: { business: Business }) {
         
         {/* Badge "Novo" ou "Novo Cupom" */}
         <div className="absolute top-3 right-3">
-          <span className={`px-3 py-1 text-xs font-semibold rounded-full ${
+          <span className={`px-3 py-1.5 text-xs font-semibold rounded-full ${
             business.has_active_coupons 
               ? 'bg-green-500 text-white' 
               : 'bg-blue-500 text-white'
@@ -116,10 +116,10 @@ function BusinessCard({ business }: { business: Business }) {
       </div>
 
       {/* Informações da empresa */}
-      <div className="p-5 flex-1 flex flex-col">
+      <div className="p-4 md:p-5 flex-1 flex flex-col">
         <div className="flex items-start gap-3 mb-3">
           {/* Logo */}
-          <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-pink-500 to-purple-500 flex items-center justify-center text-white font-bold text-lg flex-shrink-0 relative overflow-hidden">
+          <div className="w-14 h-14 md:w-12 md:h-12 rounded-lg bg-gradient-to-br from-pink-500 to-purple-500 flex items-center justify-center text-white font-bold text-xl md:text-lg flex-shrink-0 relative overflow-hidden">
             {logoUrl ? (
               <Image
                 src={logoUrl}
@@ -135,7 +135,7 @@ function BusinessCard({ business }: { business: Business }) {
           {/* Nome e ícone da categoria */}
           <div className="flex-1 min-w-0">
             <div className="flex items-start gap-2 mb-1">
-              <h3 className="font-bold text-gray-800 text-lg truncate flex-1">
+              <h3 className="font-bold text-gray-800 text-lg md:text-lg truncate flex-1">
                 {business.name}
               </h3>
               {CategoryIcon && (
@@ -271,20 +271,20 @@ export function RecentBusinesses() {
   return (
     <section className="bg-white py-12 md:py-16">
       <div className="container mx-auto px-4">
-        <div className="mb-10 text-center">
-          <h2 className="text-3xl font-bold tracking-tighter text-gray-800 md:text-4xl">
+        <div className="mb-8 md:mb-10 text-center">
+          <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold tracking-tighter text-gray-800">
             Acabaram de Chegar
           </h2>
-          <p className="mt-3 text-lg text-gray-500">
+          <p className="mt-2 md:mt-3 text-base md:text-lg text-gray-500">
             Fique por dentro das últimas novidades e cupons do bairro.
           </p>
         </div>
 
-        {/* Mobile: 1 card por vez */}
-        <div className="md:hidden">
-          <Carousel arrowsOutside={true} autoplay={false}>
+        {/* Mobile: 1 card por vez, fullwidth */}
+        <div className="md:hidden -mx-4">
+          <Carousel arrowsOutside={false} autoplay={false}>
             {businesses.map((business) => (
-              <div key={business.id} className="w-full px-2">
+              <div key={business.id} className="px-4">
                 <BusinessCard business={business} />
               </div>
             ))}

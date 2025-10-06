@@ -197,7 +197,7 @@ export default function CuponsPage() {
   })
 
   const activeCoupons = coupons.filter(c => c.status === 'active').length
-  const canCreateMore = activeCoupons < partner.maxCoupons
+  const canCreateMore = activeCoupons < partner?.maxCoupons
 
   const getStatusBadge = (status: string) => {
     const badges = {
@@ -219,7 +219,7 @@ export default function CuponsPage() {
             <div>
               <Link href="/dashboard" className="text-sm text-gray-500 hover:text-gray-700 mb-2 inline-block">← Voltar</Link>
               <h1 className="text-2xl font-bold">Meus Cupons</h1>
-              <p className="text-sm text-gray-500">Cupons ativos: {activeCoupons}/{partner.maxCoupons}</p>
+              <p className="text-sm text-gray-500">Cupons ativos: {activeCoupons}/{partner?.maxCoupons}</p>
             </div>
             {canCreateMore ? (
               <Link href="/dashboard/cupons/novo" className="px-6 py-3 bg-[#C2227A] text-white rounded-lg hover:bg-[#A01860] font-semibold">+ Novo Cupom</Link>

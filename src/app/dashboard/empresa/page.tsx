@@ -9,14 +9,22 @@ import { useToast } from '@/contexts/toast-context'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { Phone, Globe, Instagram, MapPin, Mail } from 'lucide-react'
 
+interface Category {
+  id: string
+  name: string
+}
+
 export default function EditarEmpresaPage() {
   const { user, loading: authLoading } = useAuth()
-  const { isPartner, loading: partnerLoading } = usePartner()
+  const { isPartner, partner, loading: partnerLoading } = usePartner()
   const router = useRouter()
   const toast = useToast()
   const supabase = createClientComponentClient()
   const [loading, setLoading] = useState(false)
   const [businessId, setBusinessId] = useState<string | null>(null)
+  const [categories, setCategories] = useState<Category[]>([])
+  const [loadingCategories, setLoadingCategories] = useState(true)
+  const [loadingCep, setLoadingCep] = useState(false)
 
   const [formData, setFormData] = useState({
     name: '',
@@ -36,20 +44,49 @@ export default function EditarEmpresaPage() {
     delivery: false
   })
 
+  // Carrega categorias
+  useEffect(() => {
+    async function loadCategories() {
+      const { data } = await supabase
+        .from('categories')
+        .select('id, name')
+        .order('name')
+      
+      if (data) {
+        setCategories(data)
+      }
+      setLoadingCategories(false)
+    }
+    
+    loadCategories()
+  }, [supabase])
+
   useEffect(() => {
     if (authLoading || partnerLoading) return
 
-    if (!user || !isPartner) {
+    if (!user || !isPartner || !partner) {
       router.push('/login')
       return
     }
 
     async function loadBusiness() {
-      const { data } = await supabase
+      if (!partner?.businessId) {
+        console.error('Business ID não encontrado')
+        toast.error('Empresa não encontrada')
+        return
+      }
+
+      const { data, error } = await supabase
         .from('businesses')
         .select('*')
-        .eq('user_id', user?.id)
+        .eq('id', partner.businessId)
         .single()
+
+      if (error) {
+        console.error('Erro ao carregar business:', error)
+        toast.error('Erro ao carregar dados da empresa')
+        return
+      }
 
       if (data) {
         setBusinessId(data.id)
@@ -74,7 +111,53 @@ export default function EditarEmpresaPage() {
     }
 
     loadBusiness()
-  }, [user, isPartner, authLoading, partnerLoading, router, supabase])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, isPartner, partner, authLoading, partnerLoading, router])
+
+  const handleCepChange = async (cep: string) => {
+    const cleanCep = cep.replace(/\D/g, '')
+    
+    setFormData(prev => ({ ...prev, zip_code: cleanCep }))
+    
+    if (cleanCep.length === 8) {
+      setLoadingCep(true)
+      
+      try {
+        const response = await fetch(`https://viacep.com.br/ws/${cleanCep}/json/`)
+        
+        if (!response.ok) {
+          throw new Error('Erro ao buscar CEP')
+        }
+        
+        const data = await response.json()
+        
+        if (data.erro) {
+          toast.error('CEP não encontrado')
+          return
+        }
+        
+        // Aguarda um pouco para garantir que o estado do CEP foi atualizado
+        await new Promise(resolve => setTimeout(resolve, 100))
+        
+        // Atualiza os campos de endereço
+        setFormData(prev => ({
+          ...prev,
+          address: data.logradouro || '',
+          neighborhood: data.bairro || '',
+          city: data.localidade || '',
+          state: data.uf || ''
+        }))
+        
+        toast.success('Endereço encontrado!')
+        
+      } catch (error) {
+        console.error('Erro ao buscar CEP:', error)
+        toast.error('Erro ao buscar CEP')
+      } finally {
+        setLoadingCep(false)
+      }
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -117,7 +200,7 @@ export default function EditarEmpresaPage() {
     }
   }
 
-  if (authLoading || partnerLoading) {
+  if (authLoading || partnerLoading || loadingCategories) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
@@ -153,28 +236,32 @@ export default function EditarEmpresaPage() {
                 <input 
                   type="text" 
                   value={formData.name} 
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })} 
+                  onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))} 
                   className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-[#C2227A]" 
                   required 
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1">Categoria</label>
-                <input 
-                  type="text" 
+                <label className="block text-sm font-medium mb-1">Categoria *</label>
+                <select 
                   value={formData.category_sub} 
-                  onChange={(e) => setFormData({ ...formData, category_sub: e.target.value })} 
-                  placeholder="Pizza • Italiana" 
-                  className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-[#C2227A]" 
-                />
+                  onChange={(e) => setFormData(prev => ({ ...prev, category_sub: e.target.value }))} 
+                  className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-[#C2227A]"
+                  required
+                >
+                  <option value="">Selecione uma categoria</option>
+                  {categories.map(cat => (
+                    <option key={cat.id} value={cat.name}>{cat.name}</option>
+                  ))}
+                </select>
               </div>
 
               <div>
                 <label className="block text-sm font-medium mb-1">Descrição</label>
                 <textarea 
                   value={formData.description} 
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })} 
+                  onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))} 
                   rows={3} 
                   placeholder="Sobre sua empresa..." 
                   className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-[#C2227A]" 
@@ -185,7 +272,7 @@ export default function EditarEmpresaPage() {
                 <input 
                   type="checkbox" 
                   checked={formData.delivery} 
-                  onChange={(e) => setFormData({ ...formData, delivery: e.target.checked })} 
+                  onChange={(e) => setFormData(prev => ({ ...prev, delivery: e.target.checked }))} 
                   className="rounded" 
                 />
                 <span className="text-sm">Oferece delivery</span>
@@ -204,7 +291,7 @@ export default function EditarEmpresaPage() {
                 <input 
                   type="email" 
                   value={formData.email_business} 
-                  onChange={(e) => setFormData({ ...formData, email_business: e.target.value })} 
+                  onChange={(e) => setFormData(prev => ({ ...prev, email_business: e.target.value }))} 
                   placeholder="contato@empresa.com" 
                   className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-[#C2227A]" 
                 />
@@ -215,7 +302,7 @@ export default function EditarEmpresaPage() {
                 <input 
                   type="tel" 
                   value={formData.phone} 
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })} 
+                  onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))} 
                   placeholder="(11) 5555-1234" 
                   className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-[#C2227A]" 
                 />
@@ -226,7 +313,7 @@ export default function EditarEmpresaPage() {
                 <input 
                   type="tel" 
                   value={formData.whatsapp} 
-                  onChange={(e) => setFormData({ ...formData, whatsapp: e.target.value })} 
+                  onChange={(e) => setFormData(prev => ({ ...prev, whatsapp: e.target.value }))} 
                   placeholder="11955551234" 
                   className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-[#C2227A]" 
                 />
@@ -246,7 +333,7 @@ export default function EditarEmpresaPage() {
                 <input 
                   type="text" 
                   value={formData.instagram} 
-                  onChange={(e) => setFormData({ ...formData, instagram: e.target.value })} 
+                  onChange={(e) => setFormData(prev => ({ ...prev, instagram: e.target.value }))} 
                   placeholder="@suaempresa" 
                   className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-[#C2227A]" 
                 />
@@ -259,7 +346,7 @@ export default function EditarEmpresaPage() {
                 <input 
                   type="url" 
                   value={formData.website} 
-                  onChange={(e) => setFormData({ ...formData, website: e.target.value })} 
+                  onChange={(e) => setFormData(prev => ({ ...prev, website: e.target.value }))} 
                   placeholder="https://seusite.com" 
                   className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-[#C2227A]" 
                 />
@@ -273,48 +360,53 @@ export default function EditarEmpresaPage() {
               <MapPin className="w-4 h-4" />Endereço
             </h2>
             <div className="space-y-3">
+              <div>
+                <label className="block text-sm font-medium mb-1">CEP *</label>
+                <input 
+                  type="text" 
+                  value={formData.zip_code} 
+                  onChange={(e) => handleCepChange(e.target.value)} 
+                  placeholder="00000-000" 
+                  maxLength={8}
+                  className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-[#C2227A]"
+                  disabled={loadingCep}
+                  required
+                />
+                {loadingCep && <p className="text-xs text-blue-600 mt-1">Buscando endereço...</p>}
+              </div>
+
               <div className="grid grid-cols-3 gap-2">
                 <div className="col-span-2">
                   <label className="block text-sm font-medium mb-1">Rua *</label>
                   <input 
                     type="text" 
                     value={formData.address} 
-                    onChange={(e) => setFormData({ ...formData, address: e.target.value })} 
+                    onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))} 
                     className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-[#C2227A]" 
                     required 
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Nº</label>
+                  <label className="block text-sm font-medium mb-1">Nº *</label>
                   <input 
                     type="text" 
                     value={formData.address_number} 
-                    onChange={(e) => setFormData({ ...formData, address_number: e.target.value })} 
-                    className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-[#C2227A]" 
+                    onChange={(e) => setFormData(prev => ({ ...prev, address_number: e.target.value }))} 
+                    className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-[#C2227A]"
+                    required
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="block text-sm font-medium mb-1">Bairro</label>
-                  <input 
-                    type="text" 
-                    value={formData.neighborhood} 
-                    onChange={(e) => setFormData({ ...formData, neighborhood: e.target.value })} 
-                    className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-[#C2227A]" 
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">CEP</label>
-                  <input 
-                    type="text" 
-                    value={formData.zip_code} 
-                    onChange={(e) => setFormData({ ...formData, zip_code: e.target.value })} 
-                    placeholder="00000-000" 
-                    className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-[#C2227A]" 
-                  />
-                </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Bairro *</label>
+                <input 
+                  type="text" 
+                  value={formData.neighborhood} 
+                  onChange={(e) => setFormData(prev => ({ ...prev, neighborhood: e.target.value }))} 
+                  className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-[#C2227A]"
+                  required
+                />
               </div>
 
               <div className="grid grid-cols-3 gap-2">
@@ -323,7 +415,7 @@ export default function EditarEmpresaPage() {
                   <input 
                     type="text" 
                     value={formData.city} 
-                    onChange={(e) => setFormData({ ...formData, city: e.target.value })} 
+                    onChange={(e) => setFormData(prev => ({ ...prev, city: e.target.value }))} 
                     className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-[#C2227A]" 
                     required 
                   />
@@ -333,7 +425,7 @@ export default function EditarEmpresaPage() {
                   <input 
                     type="text" 
                     value={formData.state} 
-                    onChange={(e) => setFormData({ ...formData, state: e.target.value })} 
+                    onChange={(e) => setFormData(prev => ({ ...prev, state: e.target.value }))} 
                     placeholder="SP" 
                     maxLength={2} 
                     className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-[#C2227A] uppercase" 
@@ -387,29 +479,33 @@ export default function EditarEmpresaPage() {
                   <input 
                     type="text" 
                     value={formData.name} 
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })} 
+                    onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))} 
                     className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#C2227A]" 
                     required 
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-1">Categoria / Subcategoria</label>
-                  <input 
-                    type="text" 
+                  <label className="block text-sm font-medium mb-1">Categoria *</label>
+                  <select 
                     value={formData.category_sub} 
-                    onChange={(e) => setFormData({ ...formData, category_sub: e.target.value })} 
-                    placeholder="Ex: Pizza • Italiana" 
-                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#C2227A]" 
-                  />
-                  <p className="text-xs text-gray-500 mt-1">Separe com " • " para melhor visualização</p>
+                    onChange={(e) => setFormData(prev => ({ ...prev, category_sub: e.target.value }))} 
+                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#C2227A]"
+                    required
+                  >
+                    <option value="">Selecione uma categoria</option>
+                    {categories.map(cat => (
+                      <option key={cat.id} value={cat.name}>{cat.name}</option>
+                    ))}
+                  </select>
+                  <p className="text-xs text-gray-500 mt-1">Escolha a categoria que melhor representa seu negócio</p>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium mb-1">Descrição</label>
                   <textarea 
                     value={formData.description} 
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })} 
+                    onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))} 
                     rows={4} 
                     placeholder="Conte sobre sua empresa, diferenciais, especialidades..." 
                     className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#C2227A]" 
@@ -421,7 +517,7 @@ export default function EditarEmpresaPage() {
                     <input 
                       type="checkbox" 
                       checked={formData.delivery} 
-                      onChange={(e) => setFormData({ ...formData, delivery: e.target.checked })} 
+                      onChange={(e) => setFormData(prev => ({ ...prev, delivery: e.target.checked }))} 
                       className="rounded" 
                     />
                     <span className="text-sm font-medium">Oferece delivery</span>
@@ -443,7 +539,7 @@ export default function EditarEmpresaPage() {
                     <input 
                       type="email" 
                       value={formData.email_business} 
-                      onChange={(e) => setFormData({ ...formData, email_business: e.target.value })} 
+                      onChange={(e) => setFormData(prev => ({ ...prev, email_business: e.target.value }))} 
                       placeholder="contato@empresa.com" 
                       className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#C2227A]" 
                     />
@@ -455,7 +551,7 @@ export default function EditarEmpresaPage() {
                   <input 
                     type="tel" 
                     value={formData.phone} 
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })} 
+                    onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))} 
                     placeholder="(11) 5555-1234" 
                     className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#C2227A]" 
                   />
@@ -466,7 +562,7 @@ export default function EditarEmpresaPage() {
                   <input 
                     type="tel" 
                     value={formData.whatsapp} 
-                    onChange={(e) => setFormData({ ...formData, whatsapp: e.target.value })} 
+                    onChange={(e) => setFormData(prev => ({ ...prev, whatsapp: e.target.value }))} 
                     placeholder="11955551234" 
                     className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#C2227A]" 
                   />
@@ -486,7 +582,7 @@ export default function EditarEmpresaPage() {
                   <input 
                     type="text" 
                     value={formData.instagram} 
-                    onChange={(e) => setFormData({ ...formData, instagram: e.target.value })} 
+                    onChange={(e) => setFormData(prev => ({ ...prev, instagram: e.target.value }))} 
                     placeholder="@suaempresa" 
                     className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#C2227A]" 
                   />
@@ -499,7 +595,7 @@ export default function EditarEmpresaPage() {
                   <input 
                     type="url" 
                     value={formData.website} 
-                    onChange={(e) => setFormData({ ...formData, website: e.target.value })} 
+                    onChange={(e) => setFormData(prev => ({ ...prev, website: e.target.value }))} 
                     placeholder="https://seusite.com" 
                     className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#C2227A]" 
                   />
@@ -513,48 +609,54 @@ export default function EditarEmpresaPage() {
                 <MapPin className="w-5 h-5" />Endereço
               </h2>
               <div className="space-y-4">
+                <div className="max-w-xs">
+                  <label className="block text-sm font-medium mb-1">CEP *</label>
+                  <input 
+                    type="text" 
+                    value={formData.zip_code} 
+                    onChange={(e) => handleCepChange(e.target.value)} 
+                    placeholder="00000-000" 
+                    maxLength={8}
+                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#C2227A]"
+                    disabled={loadingCep}
+                    required
+                  />
+                  {loadingCep && <p className="text-xs text-blue-600 mt-1">Buscando endereço...</p>}
+                  <p className="text-xs text-gray-500 mt-1">Digite o CEP para preencher automaticamente</p>
+                </div>
+
                 <div className="grid grid-cols-3 gap-4">
                   <div className="col-span-2">
                     <label className="block text-sm font-medium mb-1">Rua/Avenida *</label>
                     <input 
                       type="text" 
                       value={formData.address} 
-                      onChange={(e) => setFormData({ ...formData, address: e.target.value })} 
+                      onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))} 
                       className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#C2227A]" 
                       required 
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1">Número</label>
+                    <label className="block text-sm font-medium mb-1">Número *</label>
                     <input 
                       type="text" 
                       value={formData.address_number} 
-                      onChange={(e) => setFormData({ ...formData, address_number: e.target.value })} 
-                      className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#C2227A]" 
+                      onChange={(e) => setFormData(prev => ({ ...prev, address_number: e.target.value }))} 
+                      className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#C2227A]"
+                      required
                     />
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Bairro</label>
-                    <input 
-                      type="text" 
-                      value={formData.neighborhood} 
-                      onChange={(e) => setFormData({ ...formData, neighborhood: e.target.value })} 
-                      className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#C2227A]" 
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-1">CEP</label>
-                    <input 
-                      type="text" 
-                      value={formData.zip_code} 
-                      onChange={(e) => setFormData({ ...formData, zip_code: e.target.value })} 
-                      placeholder="00000-000" 
-                      className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#C2227A]" 
-                    />
-                  </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Bairro *</label>
+                  <input 
+                    type="text" 
+                    value={formData.neighborhood} 
+                    onChange={(e) => setFormData(prev => ({ ...prev, neighborhood: e.target.value }))} 
+                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#C2227A]"
+                    required
+                  />
                 </div>
 
                 <div className="grid grid-cols-3 gap-4">
@@ -563,7 +665,7 @@ export default function EditarEmpresaPage() {
                     <input 
                       type="text" 
                       value={formData.city} 
-                      onChange={(e) => setFormData({ ...formData, city: e.target.value })} 
+                      onChange={(e) => setFormData(prev => ({ ...prev, city: e.target.value }))} 
                       className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#C2227A]" 
                       required 
                     />
@@ -573,7 +675,7 @@ export default function EditarEmpresaPage() {
                     <input 
                       type="text" 
                       value={formData.state} 
-                      onChange={(e) => setFormData({ ...formData, state: e.target.value })} 
+                      onChange={(e) => setFormData(prev => ({ ...prev, state: e.target.value }))} 
                       placeholder="SP" 
                       maxLength={2} 
                       className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#C2227A] uppercase" 

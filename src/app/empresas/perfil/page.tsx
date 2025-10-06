@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
-import { Loader2, Instagram, Globe, Phone, MapPin, Clock } from 'lucide-react';
+import { Loader2, Instagram, Globe, Phone, MapPin } from 'lucide-react';
 
 interface Business {
   id: string;
@@ -22,29 +22,76 @@ interface Business {
   opening_hours: Record<string, string> | null;
 }
 
-export default function EditProfileForm({ business }: { business: Business }) {
+export default function EditProfilePage() {
   const router = useRouter();
   const supabase = createClientComponentClient();
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [business, setBusiness] = useState<Business | null>(null);
   
   const [formData, setFormData] = useState({
-    name: business.name,
-    description: business.description || '',
-    phone: business.phone || '',
-    whatsapp: business.whatsapp || '',
-    website: business.website || '',
-    instagram: business.instagram || '',
-    address: business.address,
-    address_number: business.address_number || '',
-    neighborhood: business.neighborhood || '',
-    city: business.city,
-    state: business.state,
-    zip_code: business.zip_code || ''
+    name: '',
+    description: '',
+    phone: '',
+    whatsapp: '',
+    website: '',
+    instagram: '',
+    address: '',
+    address_number: '',
+    neighborhood: '',
+    city: '',
+    state: '',
+    zip_code: ''
   });
+
+  useEffect(() => {
+    async function loadBusiness() {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          router.push('/login');
+          return;
+        }
+
+        const { data, error } = await supabase
+          .from('businesses')
+          .select('*')
+          .eq('user_id', user.id)
+          .single();
+
+        if (error) throw error;
+        
+        setBusiness(data);
+        setFormData({
+          name: data.name,
+          description: data.description || '',
+          phone: data.phone || '',
+          whatsapp: data.whatsapp || '',
+          website: data.website || '',
+          instagram: data.instagram || '',
+          address: data.address,
+          address_number: data.address_number || '',
+          neighborhood: data.neighborhood || '',
+          city: data.city,
+          state: data.state,
+          zip_code: data.zip_code || ''
+        });
+      } catch (error) {
+        console.error('Erro ao carregar empresa:', error);
+        alert('Erro ao carregar dados da empresa');
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadBusiness();
+  }, [supabase, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    if (!business) return;
+    
+    setSaving(true);
 
     try {
       const { error } = await supabase
@@ -73,12 +120,28 @@ export default function EditProfileForm({ business }: { business: Business }) {
       console.error('Erro ao atualizar perfil:', error);
       alert('Erro ao atualizar perfil');
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-[#C2227A]" />
+      </div>
+    );
+  }
+
+  if (!business) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-gray-600">Nenhuma empresa encontrada</p>
+      </div>
+    );
+  }
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-8">
+    <form onSubmit={handleSubmit} className="space-y-8 max-w-4xl mx-auto p-6">
       {/* Informações Básicas */}
       <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
         <h2 className="text-xl font-bold text-slate-800 mb-6">Informações Básicas</h2>
@@ -185,8 +248,8 @@ export default function EditProfileForm({ business }: { business: Business }) {
 
       {/* Botões */}
       <div className="flex gap-4">
-        <button type="submit" disabled={loading} className="flex-1 bg-[#C2227A] text-white px-6 py-4 rounded-xl hover:bg-[#A01860] transition-colors font-bold text-lg disabled:opacity-50">
-          {loading ? <><Loader2 className="w-5 h-5 animate-spin inline mr-2" />Salvando...</> : 'Salvar Alterações'}
+        <button type="submit" disabled={saving} className="flex-1 bg-[#C2227A] text-white px-6 py-4 rounded-xl hover:bg-[#A01860] transition-colors font-bold text-lg disabled:opacity-50">
+          {saving ? <><Loader2 className="w-5 h-5 animate-spin inline mr-2" />Salvando...</> : 'Salvar Alterações'}
         </button>
       </div>
     </form>

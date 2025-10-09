@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { useAuth } from '@/contexts/auth-context'
 import { useAdmin } from '@/hooks/useAdmin'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
-import { Building2, CheckCircle, XCircle, Clock, Eye, Ban, Copy, Check, Info, MapPin, Phone, Mail, Globe, Instagram as InstagramIcon, MoreVertical, Edit, Settings, LogOut, ExternalLink } from 'lucide-react'
+import { Building2, CheckCircle, XCircle, Clock, Eye, Ban, Copy, Check, Info, MapPin, Phone, Mail, Globe, Instagram as InstagramIcon, MoreVertical, Edit, Settings, LogOut, ExternalLink, User, FileText } from 'lucide-react'
 
 interface Business {
   id: string
@@ -17,11 +17,22 @@ interface Business {
   description: string | null
   status: 'pending' | 'approved' | 'rejected'
   created_at: string
+  
+  // NOVOS: Dados do responsável
+  responsible_name: string | null
+  responsible_email: string | null
+  responsible_phone: string | null
+  cpf_cnpj: string | null
+  document_type: string | null
+  profile_complete: boolean
+  
+  // Contatos da empresa (podem ser diferentes do responsável)
   email_business: string | null
   phone: string | null
   whatsapp: string | null
   website: string | null
   instagram: string | null
+  
   address: string
   address_number: string | null
   neighborhood: string | null
@@ -69,6 +80,10 @@ export default function AdminPage() {
   const [savingPlan, setSavingPlan] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [planFilter, setPlanFilter] = useState<'all' | 'basic' | 'premium'>('all')
+  const [showApprovalModal, setShowApprovalModal] = useState(false)
+  const [businessToApprove, setBusinessToApprove] = useState<Business | null>(null)
+  const [selectedPlan, setSelectedPlan] = useState<'basic' | 'premium'>('basic')
+  const [approving, setApproving] = useState(false)
 
   useEffect(() => {
     if (authLoading || adminLoading) return
@@ -116,75 +131,93 @@ export default function AdminPage() {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [showActionsMenu])
 
-  const generateRandomPassword = () => {
-    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789'
-    let password = ''
-    for (let i = 0; i < 10; i++) {
-      password += chars.charAt(Math.floor(Math.random() * chars.length))
-    }
-    return password
+  const openApprovalModal = (business: Business) => {
+  if (!business.responsible_email) {
+    alert(
+      'Esta empresa não tem email do responsável cadastrado.\n\n' +
+      'Edite os dados da empresa e adicione o email do responsável antes de aprovar.'
+    )
+    return
   }
 
-  const approveBusiness = async (business: Business) => {
-    if (!business.email_business) {
-      alert('Esta empresa não tem email cadastrado. Não é possível criar acesso.')
+  setBusinessToApprove(business)
+  setSelectedPlan(business.plan_type as 'basic' | 'premium' || 'basic')
+  setShowApprovalModal(true)
+  setShowDetailsModal(false)
+  setShowActionsMenu(null)
+}
+
+const approveBusiness = async () => {
+  if (!businessToApprove) return
+
+  setApproving(true)
+
+  try {
+    // ✅ Primeiro, atualizar o plano
+    const { error: planError } = await supabase
+      .from('businesses')
+      .update({ 
+        plan_type: selectedPlan,
+        max_coupons: selectedPlan === 'premium' ? 999 : 3,
+        max_photos: selectedPlan === 'premium' ? 999 : 3
+      })
+      .eq('id', businessToApprove.id)
+
+    if (planError) {
+      throw new Error('Erro ao atualizar plano')
+    }
+
+    console.log('✅ Plano atualizado:', selectedPlan)
+
+    // ✅ Pegar session
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+    
+    if (sessionError || !session) {
+      alert('Sessão expirada. Faça login novamente.')
+      window.location.href = '/login'
       return
     }
 
-    const confirmed = confirm(`Aprovar empresa "${business.name}"?\n\nIsso irá criar as credenciais de acesso para o parceiro.`)
-    if (!confirmed) return
+    console.log('🔑 Token obtido, enviando requisição...')
 
-    try {
-      const tempPassword = generateRandomPassword()
-
-      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-        email: business.email_business,
-        password: tempPassword,
-        email_confirm: true
+    // ✅ Aprovar empresa
+    const response = await fetch('/api/admin/approve-business', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session.access_token}`
+      },
+      body: JSON.stringify({ 
+        businessId: businessToApprove.id,
+        planType: selectedPlan
       })
+    })
 
-      if (authError) throw authError
+    const data = await response.json()
 
-      const { error: partnerError } = await supabase
-        .from('partners')
-        .insert({
-          user_id: authData.user.id,
-          business_id: business.id,
-          status: 'active',
-          approved_by: user?.id
-        })
-
-      if (partnerError) throw partnerError
-
-      const { error: businessError } = await supabase
-        .from('businesses')
-        .update({
-          status: 'approved',
-          approved_at: new Date().toISOString(),
-          approved_by: user?.id
-        })
-        .eq('id', business.id)
-
-      if (businessError) throw businessError
-
-      setBusinesses(businesses.map(b =>
-        b.id === business.id ? { ...b, status: 'approved' } : b
-      ))
-
-      setCredentials({
-        email: business.email_business,
-        password: tempPassword,
-        loginUrl: `${window.location.origin}/login`
-      })
-      setShowDetailsModal(false)
-      setShowCredentialsModal(true)
-      setShowActionsMenu(null)
-
-    } catch (error: any) {
-      console.error('Erro ao aprovar empresa:', error)
-      alert(`Erro ao aprovar empresa: ${error.message}`)
+    if (!response.ok) {
+      throw new Error(data.error || 'Erro ao aprovar empresa')
     }
+
+    console.log('✅ Empresa aprovada com sucesso!')
+
+    // Atualizar lista local
+    setBusinesses(businesses.map(b =>
+      b.id === businessToApprove.id ? { ...b, status: 'approved' as const, plan_type: selectedPlan } : b
+    ))
+
+    // Mostrar credenciais
+    setCredentials(data.credentials)
+    setShowApprovalModal(false)
+    setShowCredentialsModal(true)
+
+  } catch (error: any) {
+    console.error('❌ Erro ao aprovar empresa:', error)
+    alert(`Erro ao aprovar empresa: ${error.message}`)
+  } finally {
+    setApproving(false)
   }
+}
 
   const rejectBusiness = async (businessId: string, businessName: string) => {
     const confirmed = confirm(`Rejeitar empresa "${businessName}"?`)
@@ -199,7 +232,7 @@ export default function AdminPage() {
       if (error) throw error
 
       setBusinesses(businesses.map(b =>
-        b.id === businessId ? { ...b, status: 'rejected' } : b
+        b.id === businessId ? { ...b, status: 'rejected' as const } : b
       ))
 
       setShowDetailsModal(false)
@@ -231,7 +264,7 @@ export default function AdminPage() {
       if (businessError) throw businessError
 
       setBusinesses(businesses.map(b =>
-        b.id === businessId ? { ...b, status: 'rejected' } : b
+        b.id === businessId ? { ...b, status: 'rejected' as const } : b
       ))
 
       setShowActionsMenu(null)
@@ -328,7 +361,9 @@ export default function AdminPage() {
     const matchesStatus = filter === 'all' || b.status === filter
     const matchesSearch = searchQuery.trim() === '' || 
       b.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      b.slug.toLowerCase().includes(searchQuery.toLowerCase())
+      b.slug.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (b.responsible_name && b.responsible_name.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (b.responsible_email && b.responsible_email.toLowerCase().includes(searchQuery.toLowerCase()))
     const matchesPlan = planFilter === 'all' || b.plan_type === planFilter
     return matchesStatus && matchesSearch && matchesPlan
   })
@@ -443,7 +478,7 @@ export default function AdminPage() {
             <div>
               <input
                 type="text"
-                placeholder="Buscar empresa por nome..."
+                placeholder="Buscar empresa ou responsável..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full px-3 md:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C2227A] focus:border-transparent text-sm md:text-base"
@@ -452,7 +487,7 @@ export default function AdminPage() {
 
             {/* Filtros Status e Plano */}
             <div className="space-y-3">
-              {/* Filtro Status - SEM SCROLL */}
+              {/* Filtro Status */}
               <div className="flex items-center gap-2 flex-wrap">
                 <button onClick={() => setFilter('all')} className={`px-3 md:px-4 py-1.5 md:py-2 rounded-lg text-xs md:text-sm font-medium whitespace-nowrap ${filter === 'all' ? 'bg-[#C2227A] text-white' : 'bg-gray-100 text-gray-700'}`}>
                   Todas
@@ -511,8 +546,8 @@ export default function AdminPage() {
                 <thead className="bg-gray-50 border-b">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Empresa</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Responsável</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Categoria</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Contato</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Data</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Ações</th>
@@ -524,12 +559,37 @@ export default function AdminPage() {
                       <td className="px-6 py-4">
                         <div className="font-semibold text-gray-900">{business.name}</div>
                         <div className="text-sm text-gray-500">{business.slug}</div>
+                        {!business.profile_complete && (
+                          <div className="text-xs text-orange-600 mt-1">⚠️ Cadastro incompleto</div>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 text-sm">
+                        {business.responsible_name && (
+                          <div className="font-medium text-gray-900 flex items-center gap-1">
+                            <User size={14} />
+                            {business.responsible_name}
+                          </div>
+                        )}
+                        {business.responsible_email && (
+                          <div className="truncate max-w-[200px] text-blue-600 flex items-center gap-1">
+                            <Mail size={14} />
+                            {business.responsible_email}
+                          </div>
+                        )}
+                        {business.responsible_phone && (
+                          <div className="text-gray-600 flex items-center gap-1">
+                            <Phone size={14} />
+                            {business.responsible_phone}
+                          </div>
+                        )}
+                        {business.cpf_cnpj && (
+                          <div className="text-xs text-gray-500 flex items-center gap-1 mt-1">
+                            <FileText size={12} />
+                            {business.document_type}: {business.cpf_cnpj}
+                          </div>
+                        )}
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-600">{business.category_main}</td>
-                      <td className="px-6 py-4 text-sm text-gray-600">
-                        {business.email_business && <div className="truncate max-w-[200px]">{business.email_business}</div>}
-                        {business.phone && <div>{business.phone}</div>}
-                      </td>
                       <td className="px-6 py-4 text-sm text-gray-600">
                         {new Date(business.created_at).toLocaleDateString('pt-BR')}
                       </td>
@@ -579,13 +639,18 @@ export default function AdminPage() {
                     <div className="flex-1 pr-2">
                       <h3 className="font-semibold text-gray-900 text-sm">{business.name}</h3>
                       <p className="text-xs text-gray-500">{business.category_main}</p>
+                      {business.responsible_name && (
+                        <p className="text-xs text-gray-600 mt-1">👤 {business.responsible_name}</p>
+                      )}
+                      {!business.profile_complete && (
+                        <p className="text-xs text-orange-600 mt-1">⚠️ Cadastro incompleto</p>
+                      )}
                     </div>
                     <div className="flex items-center gap-2">
                       {business.status === 'pending' && <span className="px-2 py-1 bg-yellow-100 text-yellow-700 text-xs font-semibold rounded-full whitespace-nowrap">Pendente</span>}
                       {business.status === 'approved' && <span className="px-2 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded-full whitespace-nowrap">Aprovada</span>}
                       {business.status === 'rejected' && <span className="px-2 py-1 bg-red-100 text-red-700 text-xs font-semibold rounded-full whitespace-nowrap">Rejeitada</span>}
                       
-                      {/* Container do menu com classe para detectar cliques fora */}
                       <div className="actions-menu-container relative">
                         <button onClick={() => setShowActionsMenu(showActionsMenu === business.id ? null : business.id)} className="p-2 hover:bg-gray-100 rounded">
                           <MoreVertical size={18} />
@@ -607,7 +672,7 @@ export default function AdminPage() {
                             </Link>
                             {business.status === 'pending' && (
                               <>
-                                <button onClick={() => approveBusiness(business)} className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2 text-green-600">
+                                <button onClick={() => openApprovalModal(business)} className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2 text-green-600">
                                   <CheckCircle size={16} /> Aprovar
                                 </button>
                                 <button onClick={() => rejectBusiness(business.id, business.name)} className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2 text-red-600">
@@ -626,8 +691,8 @@ export default function AdminPage() {
                     </div>
                   </div>
 
-                  {business.email_business && (
-                    <p className="text-xs text-gray-600 mb-1 truncate">{business.email_business}</p>
+                  {business.responsible_email && (
+                    <p className="text-xs text-blue-600 mb-1 truncate">📧 {business.responsible_email}</p>
                   )}
                   <p className="text-xs text-gray-500">{new Date(business.created_at).toLocaleDateString('pt-BR')}</p>
                 </div>
@@ -657,6 +722,42 @@ export default function AdminPage() {
             </div>
 
             <div className="space-y-4 md:space-y-6">
+              {/* NOVA SEÇÃO: Dados do Responsável */}
+              {(selectedBusiness.responsible_name || selectedBusiness.responsible_email) && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <h3 className="font-semibold mb-3 text-sm md:text-base text-blue-900 flex items-center gap-2">
+                    <User size={18} />
+                    Responsável pelo Cadastro
+                  </h3>
+                  <div className="space-y-2">
+                    {selectedBusiness.responsible_name && (
+                      <div className="flex items-center gap-2 text-xs md:text-sm">
+                        <span className="font-medium text-blue-800">Nome:</span>
+                        <span className="text-gray-700">{selectedBusiness.responsible_name}</span>
+                      </div>
+                    )}
+                    {selectedBusiness.responsible_email && (
+                      <div className="flex items-center gap-2 text-xs md:text-sm">
+                        <span className="font-medium text-blue-800">Email (Login):</span>
+                        <span className="text-gray-700">{selectedBusiness.responsible_email}</span>
+                      </div>
+                    )}
+                    {selectedBusiness.responsible_phone && (
+                      <div className="flex items-center gap-2 text-xs md:text-sm">
+                        <span className="font-medium text-blue-800">Telefone:</span>
+                        <span className="text-gray-700">{selectedBusiness.responsible_phone}</span>
+                      </div>
+                    )}
+                    {selectedBusiness.cpf_cnpj && (
+                      <div className="flex items-center gap-2 text-xs md:text-sm">
+                        <span className="font-medium text-blue-800">{selectedBusiness.document_type}:</span>
+                        <span className="text-gray-700">{selectedBusiness.cpf_cnpj}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {selectedBusiness.description && (
                 <div>
                   <h3 className="font-semibold mb-2 text-sm md:text-base">Descrição</h3>
@@ -665,7 +766,7 @@ export default function AdminPage() {
               )}
 
               <div>
-                <h3 className="font-semibold mb-2 text-sm md:text-base">Informações de Contato</h3>
+                <h3 className="font-semibold mb-2 text-sm md:text-base">Informações de Contato da Empresa</h3>
                 <div className="space-y-2">
                   {selectedBusiness.email_business && (
                     <div className="flex items-center gap-2 text-xs md:text-base text-gray-600">
@@ -697,20 +798,27 @@ export default function AdminPage() {
                       <span>{selectedBusiness.instagram}</span>
                     </div>
                   )}
+                  {!selectedBusiness.email_business && !selectedBusiness.phone && !selectedBusiness.whatsapp && (
+                    <p className="text-xs text-gray-500 italic">Nenhum contato da empresa cadastrado ainda</p>
+                  )}
                 </div>
               </div>
 
               <div>
                 <h3 className="font-semibold mb-2 text-sm md:text-base">Endereço</h3>
-                <div className="flex items-start gap-2 text-xs md:text-base text-gray-600">
-                  <MapPin size={16} className="mt-1 flex-shrink-0" />
-                  <span>
-                    {selectedBusiness.address}{selectedBusiness.address_number && `, ${selectedBusiness.address_number}`}
-                    {selectedBusiness.neighborhood && ` - ${selectedBusiness.neighborhood}`}
-                    <br />
-                    {selectedBusiness.city}, {selectedBusiness.state}
-                  </span>
-                </div>
+                {selectedBusiness.address ? (
+                  <div className="flex items-start gap-2 text-xs md:text-base text-gray-600">
+                    <MapPin size={16} className="mt-1 flex-shrink-0" />
+                    <span>
+                      {selectedBusiness.address}{selectedBusiness.address_number && `, ${selectedBusiness.address_number}`}
+                      {selectedBusiness.neighborhood && ` - ${selectedBusiness.neighborhood}`}
+                      <br />
+                      {selectedBusiness.city}, {selectedBusiness.state}
+                    </span>
+                  </div>
+                ) : (
+                  <p className="text-xs text-orange-600 italic">⚠️ Endereço não cadastrado (cadastro incompleto)</p>
+                )}
               </div>
 
               <div>
@@ -719,6 +827,12 @@ export default function AdminPage() {
                   <div>
                     <span className="text-gray-500">Plano:</span>
                     <span className="ml-2 font-medium">{selectedBusiness.plan_type === 'premium' ? 'Premium' : 'Básico'}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-500">Cadastro completo:</span>
+                    <span className={`ml-2 font-medium ${selectedBusiness.profile_complete ? 'text-green-600' : 'text-orange-600'}`}>
+                      {selectedBusiness.profile_complete ? '✓ Sim' : '✗ Não'}
+                    </span>
                   </div>
                   <div>
                     <span className="text-gray-500">Cadastrado em:</span>
@@ -742,7 +856,7 @@ export default function AdminPage() {
                   <button onClick={() => rejectBusiness(selectedBusiness.id, selectedBusiness.name)} className="flex-1 px-4 md:px-6 py-2 md:py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm md:text-base">
                     Rejeitar
                   </button>
-                  <button onClick={() => approveBusiness(selectedBusiness)} className="flex-1 px-4 md:px-6 py-2 md:py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm md:text-base">
+                  <button onClick={approveBusiness} className="flex-1 px-4 md:px-6 py-2 md:py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm md:text-base">
                     Aprovar
                   </button>
                 </div>
@@ -751,17 +865,123 @@ export default function AdminPage() {
           </div>
         </div>
       )}
+       {/* Modal Aprovação com Seleção de Plano */}
+      {showApprovalModal && businessToApprove && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-2xl w-full p-4 md:p-6 max-h-[90vh] overflow-y-auto">
+            <h2 className="text-lg md:text-2xl font-bold mb-4 text-green-600">
+              🎉 Aprovar Empresa
+            </h2>
+            
+            <div className="mb-6">
+              <h3 className="text-lg font-semibold mb-2">{businessToApprove.name}</h3>
+              <div className="text-sm text-gray-600 space-y-1">
+                <p><strong>Responsável:</strong> {businessToApprove.responsible_name || 'Não informado'}</p>
+                <p><strong>Email de login:</strong> {businessToApprove.responsible_email}</p>
+              </div>
+            </div>
 
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-3">
+                Selecione o Plano
+              </label>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Plano Básico */}
+                <button
+                  onClick={() => setSelectedPlan('basic')}
+                  disabled={approving}
+                  className={`p-4 border-2 rounded-lg text-left transition-all ${
+                    selectedPlan === 'basic'
+                      ? 'border-[#C2227A] bg-pink-50'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <div className="flex items-start justify-between mb-2">
+                    <h4 className="font-bold text-lg">Plano Básico</h4>
+                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                      selectedPlan === 'basic' ? 'border-[#C2227A]' : 'border-gray-300'
+                    }`}>
+                      {selectedPlan === 'basic' && (
+                        <div className="w-3 h-3 rounded-full bg-[#C2227A]"></div>
+                      )}
+                    </div>
+                  </div>
+                  <ul className="text-sm text-gray-600 space-y-1">
+                    <li>✓ Até 3 cupons ativos</li>
+                    <li>✓ Até 3 fotos</li>
+                    <li>✓ Perfil completo</li>
+                    <li>✓ Contatos visíveis</li>
+                  </ul>
+                </button>
+
+                {/* Plano Premium */}
+                <button
+                  onClick={() => setSelectedPlan('premium')}
+                  disabled={approving}
+                  className={`p-4 border-2 rounded-lg text-left transition-all ${
+                    selectedPlan === 'premium'
+                      ? 'border-purple-600 bg-purple-50'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <div className="flex items-start justify-between mb-2">
+                    <h4 className="font-bold text-lg text-purple-600">Plano Premium</h4>
+                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                      selectedPlan === 'premium' ? 'border-purple-600' : 'border-gray-300'
+                    }`}>
+                      {selectedPlan === 'premium' && (
+                        <div className="w-3 h-3 rounded-full bg-purple-600"></div>
+                      )}
+                    </div>
+                  </div>
+                  <ul className="text-sm text-gray-600 space-y-1">
+                    <li>✓ Cupons ilimitados</li>
+                    <li>✓ Fotos ilimitadas</li>
+                    <li>✓ Destaque na home</li>
+                    <li>✓ Badge Premium</li>
+                  </ul>
+                </button>
+              </div>
+            </div>
+
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 md:p-4 mb-6">
+              <p className="text-xs md:text-sm text-blue-800">
+                <strong>📧 Email automático:</strong> Após aprovar, o parceiro receberá um email com as credenciais de acesso e informações sobre o plano selecionado.
+              </p>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-3">
+              <button
+                onClick={() => setShowApprovalModal(false)}
+                disabled={approving}
+                className="flex-1 px-4 md:px-6 py-2 md:py-3 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 text-sm md:text-base"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={approveBusiness}
+                disabled={approving}
+                className="flex-1 px-4 md:px-6 py-2 md:py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 font-semibold text-sm md:text-base"
+              >
+                {approving ? 'Aprovando...' : '✓ Aprovar e Enviar Email'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
       {/* Modal Credenciais */}
       {showCredentialsModal && credentials && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg max-w-2xl w-full p-4 md:p-6 max-h-[90vh] overflow-y-auto">
-            <h2 className="text-lg md:text-2xl font-bold mb-4 text-green-600">Empresa Aprovada!</h2>
-            <p className="text-xs md:text-base text-gray-600 mb-6">As credenciais de acesso foram criadas. Copie e envie para o parceiro:</p>
+            <h2 className="text-lg md:text-2xl font-bold mb-4 text-green-600">✅ Empresa Aprovada!</h2>
+            <p className="text-xs md:text-base text-gray-600 mb-2">As credenciais de acesso foram criadas com sucesso.</p>
+            <p className="text-xs md:text-sm text-blue-600 mb-6">📧 Um email de boas-vindas foi enviado automaticamente para o responsável.</p>
 
             <div className="space-y-4 bg-gray-50 p-3 md:p-4 rounded-lg">
               <div>
-                <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">Email de acesso:</label>
+                <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">Email de acesso (Login):</label>
                 <div className="flex gap-2">
                   <input type="text" value={credentials.email} readOnly className="flex-1 px-3 md:px-4 py-2 border rounded-lg bg-white text-xs md:text-sm" />
                   <button onClick={() => copyToClipboard(credentials.email, 'email')} className="px-3 md:px-4 py-2 bg-[#C2227A] text-white rounded-lg hover:bg-[#A01860] flex items-center gap-2 text-xs md:text-sm whitespace-nowrap">
@@ -794,8 +1014,16 @@ export default function AdminPage() {
               </div>
             </div>
 
+            <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-3 md:p-4">
+              <p className="text-xs md:text-sm text-blue-800">
+                <strong>✉️ Email enviado!</strong> O parceiro já recebeu um email com as credenciais de acesso. Você pode copiar as informações acima caso precise enviar manualmente por WhatsApp.
+              </p>
+            </div>
+
             <div className="mt-6 bg-yellow-50 border border-yellow-200 rounded-lg p-3 md:p-4">
-              <p className="text-xs md:text-sm text-yellow-800"><strong>Importante:</strong> Guarde essas credenciais. O parceiro deve fazer login e trocar a senha no primeiro acesso.</p>
+              <p className="text-xs md:text-sm text-yellow-800">
+                <strong>⚠️ Importante:</strong> O parceiro deve fazer login e completar o cadastro (adicionar endereço) para a empresa aparecer no site público.
+              </p>
             </div>
 
             <button onClick={() => setShowCredentialsModal(false)} className="mt-6 w-full px-6 py-3 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 font-semibold text-sm md:text-base">

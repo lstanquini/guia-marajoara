@@ -32,7 +32,7 @@ interface FeaturedBusiness {
     neighborhood: string | null
     city: string
     whatsapp: string | null
-  }
+  } | null
   coupon: {
     id: string
     title: string
@@ -73,6 +73,11 @@ function generateGradient(slug: string): string {
 
 // Componente Mobile - Simplificado
 function HeroCardMobile({ featured }: { featured: FeaturedBusiness }) {
+  // ✅ VALIDAÇÃO: Se não tem business, não renderiza
+  if (!featured?.business) {
+    return null
+  }
+
   // MOBILE: Usa banner_mobile_url se existir, senão usa banner_url como fallback
   const bannerUrl = getValidImageUrl(featured.business.banner_mobile_url) || 
                     getValidImageUrl(featured.business.banner_url)
@@ -166,8 +171,9 @@ function HeroCardMobile({ featured }: { featured: FeaturedBusiness }) {
           
           {/* Botão WhatsApp */}
           {featured.business.whatsapp && (
-            <a
-              href={`https://wa.me/${featured.business.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(`Olá! Vi o destaque de ${displayTitle} no Guia Marajoara`)}`}
+            
+              <a
+                href={`https://wa.me/${featured.business.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(`Olá! Vi o destaque de ${displayTitle} no Guia Marajoara`)}`}
               target="_blank"
               rel="noopener noreferrer"
               className="w-full bg-[#25D366] text-white px-6 py-4 rounded-xl font-bold hover:bg-[#20BA5A] transition-colors shadow-xl flex items-center justify-center gap-2"
@@ -186,6 +192,11 @@ function HeroCardMobile({ featured }: { featured: FeaturedBusiness }) {
 
 // Componente Desktop - Completo
 function HeroCardDesktop({ featured }: { featured: FeaturedBusiness }) {
+  // ✅ VALIDAÇÃO: Se não tem business, não renderiza
+  if (!featured?.business) {
+    return null
+  }
+
   // DESKTOP: Usa apenas banner_url (horizontal)
   const bannerUrl = getValidImageUrl(featured.business.banner_url)
   const logoUrl = getValidImageUrl(featured.business.logo_url)
@@ -274,6 +285,7 @@ function HeroCardDesktop({ featured }: { featured: FeaturedBusiness }) {
             
             <div className="flex flex-wrap gap-4">
               {featured.business.whatsapp && (
+                
                 <a
                   href={`https://wa.me/${featured.business.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(`Olá! Vi o destaque de ${displayTitle} no Guia Marajoara`)}`}
                   target="_blank"
@@ -339,9 +351,14 @@ export function FeaturedSection() {
           .order('order_index')
 
         if (error) throw error
-        setFeatured(data || [])
+        
+        // ✅ Filtrar apenas destaques que têm business válido
+        const validFeatured = (data || []).filter(item => item.business !== null)
+        
+        setFeatured(validFeatured)
       } catch (error) {
         console.error('Erro ao carregar destaques:', error)
+        setFeatured([]) // ✅ Se der erro, array vazio (não quebra)
       } finally {
         setLoading(false)
       }

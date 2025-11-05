@@ -82,68 +82,16 @@ export async function POST(request: NextRequest) {
     const tempPassword = generatePassword()
 
     console.log('🔄 Verificando se usuário já existe...')
-    
+
     // Buscar usuário existente
     const { data: listData } = await supabase.auth.admin.listUsers()
     let targetUser = listData?.users?.find(u => u.email === business.responsible_email)
-    
-    if (targetUser) {
-      console.log('⚠️ Usuário JÁ EXISTE:', targetUser.id)
-      
-      // Verificar se tem profile
-      const { data: existingProfile } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', targetUser.id)
-        .maybeSingle()
-      
-      if (!existingProfile) {
-        console.log('🔄 Criando profile faltante...')
-        const { error: profileError } = await supabase.from('profiles').insert({
-          id: targetUser.id,
-          name: business.responsible_name || business.name,
-          role: 'partner'
-        })
-        
-        if (profileError) {
-          console.error('❌ Erro criar profile:', profileError)
-          return NextResponse.json({ error: 'Erro criar profile' }, { status: 500 })
-        }
-        console.log('✅ Profile criado!')
-      } else {
-        console.log('✅ Profile já existe')
-      }
-      
-      // Verificar se tem partner
-      const { data: existingPartner } = await supabase
-        .from('partners')
-        .select('*')
-        .eq('user_id', targetUser.id)
-        .eq('business_id', businessId)
-        .maybeSingle()
-      
-      if (!existingPartner) {
-        console.log('🔄 Criando partner faltante...')
-        const { error: partnerError } = await supabase.from('partners').insert({
-          user_id: targetUser.id,
-          business_id: businessId,
-          status: 'active',
-          approved_by: user.id
-        })
-        
-        if (partnerError) {
-          console.error('❌ Erro criar partner:', partnerError)
-          return NextResponse.json({ error: 'Erro criar partner' }, { status: 500 })
-        }
-        console.log('✅ Partner criado!')
-      } else {
-        console.log('✅ Partner já existe')
-      }
-      
-    } else {
+    let isNewUser = false
+
+    if (!targetUser) {
       // Criar NOVO usuário
       console.log('🔄 Criando NOVO usuário...')
-      
+
       const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
         email: business.responsible_email,
         password: tempPassword,
@@ -156,56 +104,79 @@ export async function POST(request: NextRequest) {
       })
 
       if (createError) {
-        console.error('❌ Erro criar usuário:', createError)
-        return NextResponse.json({ 
-          error: `Erro criar usuário: ${createError.message}` 
-        }, { status: 400 })
+        // Se der erro de usuário duplicado, buscar o usuário existente
+        if (createError.message?.includes('already') || createError.message?.includes('exists')) {
+          console.log('⚠️ Usuário já existe (erro ao criar), buscando...')
+          const { data: retryList } = await supabase.auth.admin.listUsers()
+          targetUser = retryList?.users?.find(u => u.email === business.responsible_email)
+
+          if (!targetUser) {
+            console.error('❌ Não conseguiu encontrar usuário existente')
+            return NextResponse.json({ error: 'Erro ao buscar usuário existente' }, { status: 500 })
+          }
+        } else {
+          console.error('❌ Erro criar usuário:', createError)
+          return NextResponse.json({
+            error: `Erro criar usuário: ${createError.message}`
+          }, { status: 400 })
+        }
+      } else {
+        console.log('✅ Usuário criado:', newUser.user.id)
+        targetUser = newUser.user
+        isNewUser = true
+
+        // Aguardar
+        await new Promise(resolve => setTimeout(resolve, 500))
       }
-
-      console.log('✅ Usuário criado:', newUser.user.id)
-      targetUser = newUser.user
-
-      // Aguardar
-      await new Promise(resolve => setTimeout(resolve, 500))
-
-      // Criar profile
-      console.log('🔄 Criando profile...')
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .insert({
-          id: newUser.user.id,
-          name: business.responsible_name || business.name,
-          role: 'partner'
-        })
-
-      if (profileError) {
-        console.error('❌ Erro profile:', profileError)
-        await supabase.auth.admin.deleteUser(newUser.user.id)
-        return NextResponse.json({ error: `Erro criar profile: ${profileError.message}` }, { status: 500 })
-      }
-
-      console.log('✅ Profile criado!')
-
-      // Criar partner
-      console.log('🔄 Criando partner...')
-      const { error: partnerError } = await supabase
-        .from('partners')
-        .insert({
-          user_id: newUser.user.id,
-          business_id: businessId,
-          status: 'active',
-          approved_by: user.id
-        })
-
-      if (partnerError) {
-        console.error('❌ Erro partner:', partnerError)
-        await supabase.from('profiles').delete().eq('id', newUser.user.id)
-        await supabase.auth.admin.deleteUser(newUser.user.id)
-        return NextResponse.json({ error: `Erro criar partner: ${partnerError.message}` }, { status: 500 })
-      }
-
-      console.log('✅ Partner criado!')
+    } else {
+      console.log('⚠️ Usuário JÁ EXISTE:', targetUser.id)
     }
+
+    // UPSERT profile (cria ou atualiza)
+    console.log('🔄 Garantindo profile...')
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .upsert({
+        id: targetUser!.id,
+        name: business.responsible_name || business.name,
+        role: 'partner'
+      }, {
+        onConflict: 'id'
+      })
+
+    if (profileError) {
+      console.error('❌ Erro upsert profile:', profileError)
+      if (isNewUser) {
+        await supabase.auth.admin.deleteUser(targetUser!.id)
+      }
+      return NextResponse.json({ error: 'Erro garantir profile' }, { status: 500 })
+    }
+
+    console.log('✅ Profile garantido!')
+
+    // UPSERT partner (cria ou atualiza)
+    console.log('🔄 Garantindo partner...')
+    const { error: partnerError } = await supabase
+      .from('partners')
+      .upsert({
+        user_id: targetUser!.id,
+        business_id: businessId,
+        status: 'active',
+        approved_by: user.id
+      }, {
+        onConflict: 'user_id,business_id'
+      })
+
+    if (partnerError) {
+      console.error('❌ Erro upsert partner:', partnerError)
+      if (isNewUser) {
+        await supabase.from('profiles').delete().eq('id', targetUser!.id)
+        await supabase.auth.admin.deleteUser(targetUser!.id)
+      }
+      return NextResponse.json({ error: 'Erro garantir partner' }, { status: 500 })
+    }
+
+    console.log('✅ Partner garantido!')
 
     // Aprovar empresa
     // Aprovar empresa

@@ -250,29 +250,52 @@ const approveBusiness = async () => {
     if (!confirmed) return
 
     try {
-      const { error: partnerError } = await supabase
+      console.log('Desativando empresa:', businessId)
+
+      // Atualizar partners (pode não existir ainda se empresa só foi cadastrada)
+      const { error: partnerError, data: partnerData } = await supabase
         .from('partners')
         .update({ status: 'inactive' })
         .eq('business_id', businessId)
+        .select()
 
-      if (partnerError) throw partnerError
+      if (partnerError) {
+        console.error('Erro ao desativar partner:', partnerError)
+        // Não bloqueia se partner não existir
+        if (partnerError.code !== 'PGRST116') { // PGRST116 = not found
+          throw partnerError
+        }
+      } else {
+        console.log('Partner desativado:', partnerData)
+      }
 
-      const { error: businessError } = await supabase
+      // Atualizar status da empresa
+      const { error: businessError, data: businessData } = await supabase
         .from('businesses')
-        .update({ status: 'rejected' })
+        .update({
+          status: 'rejected',
+          updated_at: new Date().toISOString()
+        })
         .eq('id', businessId)
+        .select()
 
-      if (businessError) throw businessError
+      if (businessError) {
+        console.error('Erro ao desativar business:', businessError)
+        throw new Error(`Erro ao desativar empresa: ${businessError.message}`)
+      }
 
+      console.log('Empresa desativada:', businessData)
+
+      // Atualizar estado local
       setBusinesses(businesses.map(b =>
         b.id === businessId ? { ...b, status: 'rejected' as const } : b
       ))
 
       setShowActionsMenu(null)
-      alert('Empresa desativada com sucesso')
-    } catch (error) {
-      console.error('Erro:', error)
-      alert('Erro ao desativar empresa')
+      alert('Empresa desativada com sucesso!')
+    } catch (error: any) {
+      console.error('Erro completo ao desativar:', error)
+      alert(`Erro ao desativar empresa: ${error.message || 'Erro desconhecido'}`)
     }
   }
 

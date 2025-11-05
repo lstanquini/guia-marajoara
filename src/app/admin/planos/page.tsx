@@ -1,12 +1,9 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
-import Link from 'next/link'
-import { useAuth } from '@/contexts/auth-context'
-import { useAdmin } from '@/hooks/useAdmin'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
-import { ArrowLeft, Save, Package } from 'lucide-react'
+import { Save, Package } from 'lucide-react'
+import { AdminLayout } from '@/components/admin/AdminLayout'
 
 interface PlanTemplate {
   id: string
@@ -19,9 +16,6 @@ interface PlanTemplate {
 }
 
 export default function PlanosPage() {
-  const { user, loading: authLoading } = useAuth()
-  const { isAdmin, loading: adminLoading } = useAdmin()
-  const router = useRouter()
   const supabase = createClientComponentClient()
 
   const [plans, setPlans] = useState<PlanTemplate[]>([])
@@ -29,16 +23,6 @@ export default function PlanosPage() {
   const [saving, setSaving] = useState<string | null>(null)
 
   useEffect(() => {
-    if (authLoading || adminLoading) return
-
-    if (!user || !isAdmin) {
-      router.push('/login')
-    }
-  }, [user, isAdmin, authLoading, adminLoading, router])
-
-  useEffect(() => {
-    if (!isAdmin) return
-
     async function loadPlans() {
       setLoading(true)
       try {
@@ -57,7 +41,7 @@ export default function PlanosPage() {
     }
 
     loadPlans()
-  }, [isAdmin, supabase])
+  }, [supabase])
 
   const updatePlan = async (plan: PlanTemplate) => {
     setSaving(plan.id)
@@ -86,36 +70,26 @@ export default function PlanosPage() {
   }
 
   const handleChange = (planId: string, field: keyof PlanTemplate, value: any) => {
-    setPlans(plans.map(p => 
+    setPlans(plans.map(p =>
       p.id === planId ? { ...p, [field]: value } : p
     ))
   }
 
-  if (authLoading || adminLoading || loading) {
-    return <div className="min-h-screen flex items-center justify-center">Carregando...</div>
-  }
-
-  if (!user || !isAdmin) {
-    return null
+  if (loading) {
+    return (
+      <AdminLayout>
+        <div className="flex items-center justify-center">Carregando...</div>
+      </AdminLayout>
+    )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="bg-white shadow">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
-          <div className="flex items-center gap-4">
-            <Link href="/admin" className="p-2 hover:bg-gray-100 rounded-lg">
-              <ArrowLeft size={24} />
-            </Link>
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Gerenciar Planos</h1>
-              <p className="text-gray-500 mt-1 text-sm sm:text-base">Definir características padrão dos planos</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
+    <AdminLayout>
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        <div className="mb-6">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Gerenciar Planos</h1>
+          <p className="text-gray-500 mt-1 text-sm sm:text-base">Definir características padrão dos planos</p>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {plans.map(plan => (
             <div key={plan.id} className="bg-white rounded-lg shadow-lg p-6">
@@ -233,6 +207,6 @@ export default function PlanosPage() {
           </p>
         </div>
       </div>
-    </div>
+    </AdminLayout>
   )
 }

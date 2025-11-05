@@ -6,10 +6,11 @@ import Link from 'next/link'
 import { useAuth } from '@/contexts/auth-context'
 import { useAdmin } from '@/hooks/useAdmin'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
-import { 
-  ArrowLeft, Star, Plus, Edit2, Trash2, ChevronUp, ChevronDown, 
+import {
+  ArrowLeft, Star, Plus, Edit2, Trash2, ChevronUp, ChevronDown,
   AlertCircle, Search, X, Save
 } from 'lucide-react'
+import { AdminLayout } from '@/components/admin/AdminLayout'
 
 interface Business {
   id: string
@@ -80,13 +81,6 @@ export default function AdminDestaquesPage() {
     order_index: 1,
     is_active: true
   })
-
-  useEffect(() => {
-    if (authLoading || adminLoading) return
-    if (!user || !isAdmin) {
-      router.push('/login')
-    }
-  }, [user, isAdmin, authLoading, adminLoading, router])
 
   useEffect(() => {
     if (!isAdmin) return
@@ -339,14 +333,6 @@ export default function AdminDestaquesPage() {
     }
   }
 
-  if (authLoading || adminLoading) {
-    return <div className="min-h-screen flex items-center justify-center">Carregando...</div>
-  }
-
-  if (!user || !isAdmin) {
-    return null
-  }
-
   const filteredBusinesses = availableBusinesses.filter(b => {
     const alreadyFeatured = featuredBusinesses.some(f => f.business_id === b.id)
     if (alreadyFeatured) return false
@@ -359,38 +345,7 @@ export default function AdminDestaquesPage() {
   const withCouponCount = featuredBusinesses.filter(f => f.coupon_id && f.is_active).length
 
   return (
-    <>
-      {/* Header Mobile - Sticky */}
-      <div className="sticky top-0 z-10 bg-white shadow md:hidden">
-        <div className="px-4 py-3">
-          <div className="flex items-center gap-3">
-            <Link href="/admin" className="p-2 hover:bg-gray-100 rounded-lg">
-              <ArrowLeft className="w-5 h-5" />
-            </Link>
-            <div>
-              <h1 className="text-lg font-bold text-gray-900">Destaques</h1>
-              <p className="text-xs text-gray-500">Gerenciar homepage</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Header Desktop */}
-      <div className="hidden md:block bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center gap-4">
-            <Link href="/admin" className="p-2 hover:bg-gray-100 rounded-lg">
-              <ArrowLeft className="w-5 h-5" />
-            </Link>
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Destaques da Semana</h1>
-              <p className="text-gray-500 mt-1">Gerenciar empresas em destaque na homepage</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Conteúdo */}
+    <AdminLayout>
       <div className="min-h-screen bg-gray-50 pb-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
           
@@ -764,6 +719,6 @@ export default function AdminDestaquesPage() {
           </div>
         </div>
       )}
-    </>
+    </AdminLayout>
   )
 }

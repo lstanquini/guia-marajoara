@@ -1,12 +1,11 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
-import Link from 'next/link'
 import { useAuth } from '@/contexts/auth-context'
 import { useAdmin } from '@/hooks/useAdmin'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
-import { ArrowLeft, Upload, X, Play, Save, Image as ImageIcon, Video as VideoIcon } from 'lucide-react'
+import { Upload, X, Play, Save, Image as ImageIcon, Video as VideoIcon } from 'lucide-react'
+import { AdminLayout } from '@/components/admin/AdminLayout'
 
 interface MariSettings {
   id: string
@@ -39,7 +38,6 @@ interface FormData {
 export default function AdminMariPage() {
   const { user, loading: authLoading } = useAuth()
   const { isAdmin, loading: adminLoading } = useAdmin()
-  const router = useRouter()
   const supabase = createClientComponentClient()
 
   const [settings, setSettings] = useState<MariSettings | null>(null)
@@ -65,13 +63,6 @@ export default function AdminMariPage() {
   const [previewPhoto, setPreviewPhoto] = useState<string | null>(null)
   const [previewVideo, setPreviewVideo] = useState<string | null>(null)
   const [previewThumbnail, setPreviewThumbnail] = useState<string | null>(null)
-
-  useEffect(() => {
-    if (authLoading || adminLoading) return
-    if (!user || !isAdmin) {
-      router.push('/login')
-    }
-  }, [user, isAdmin, authLoading, adminLoading, router])
 
   useEffect(() => {
     if (!isAdmin) return
@@ -293,38 +284,7 @@ export default function AdminMariPage() {
   const displayImage = previewVideo && previewThumbnail ? previewThumbnail : previewPhoto
 
   return (
-    <>
-      {/* Header Mobile - Sticky */}
-      <div className="sticky top-0 z-10 bg-white shadow md:hidden">
-        <div className="px-4 py-3">
-          <div className="flex items-center gap-3">
-            <Link href="/admin" className="p-2 hover:bg-gray-100 rounded-lg">
-              <ArrowLeft className="w-5 h-5" />
-            </Link>
-            <div>
-              <h1 className="text-lg font-bold text-gray-900">Seção Mari</h1>
-              <p className="text-xs text-gray-500">Configurar homepage</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Header Desktop */}
-      <div className="hidden md:block bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center gap-4">
-            <Link href="/admin" className="p-2 hover:bg-gray-100 rounded-lg">
-              <ArrowLeft className="w-5 h-5" />
-            </Link>
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Seção Mari Carreira</h1>
-              <p className="text-gray-500 mt-1">Gerenciar informações da Mari na homepage</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Conteúdo */}
+    <AdminLayout>
       <div className="min-h-screen bg-gray-50 pb-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
           
@@ -644,6 +604,6 @@ export default function AdminMariPage() {
           )}
         </div>
       </div>
-    </>
+    </AdminLayout>
   )
 }

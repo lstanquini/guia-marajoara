@@ -200,12 +200,17 @@ export default async function EmpresaPage({ params }: { params: Promise<{ slug: 
               <section className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
                 <h2 className="text-2xl font-bold text-slate-800 mb-6">Horários</h2>
                 <div className="space-y-3">
-                  {Object.entries(business.opening_hours).map(([day, hours]) => (
-                    <div key={day} className="flex justify-between items-center py-3 border-b border-slate-100 last:border-0">
-                      <span className="text-slate-600 font-medium capitalize">{dayNames[day] || day}</span>
-                      <span className="text-slate-900 font-semibold">{hours as string}</span>
-                    </div>
-                  ))}
+                  {Object.entries(business.opening_hours).map(([day, hours]: [string, any]) => {
+                    const schedule = hours as { open: string; close: string; closed: boolean }
+                    return (
+                      <div key={day} className="flex justify-between items-center py-3 border-b border-slate-100 last:border-0">
+                        <span className="text-slate-600 font-medium capitalize">{dayNames[day] || day}</span>
+                        <span className="text-slate-900 font-semibold">
+                          {schedule.closed ? 'Fechado' : `${schedule.open} - ${schedule.close}`}
+                        </span>
+                      </div>
+                    )
+                  })}
                 </div>
               </section>
             )}

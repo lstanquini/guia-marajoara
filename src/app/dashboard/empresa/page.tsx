@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/contexts/auth-context'
@@ -14,6 +14,8 @@ interface Category {
   name: string
 }
 
+const STORAGE_KEY_PREFIX = 'editar-empresa-draft-'
+
 export default function EditarEmpresaPage() {
   const { user, loading: authLoading } = useAuth()
   const { isPartner, partner, loading: partnerLoading } = usePartner()
@@ -25,6 +27,8 @@ export default function EditarEmpresaPage() {
   const [categories, setCategories] = useState<Category[]>([])
   const [loadingCategories, setLoadingCategories] = useState(true)
   const [loadingCep, setLoadingCep] = useState(false)
+  const hasLoadedFromDB = useRef(false)
+  const storageKey = useRef<string>('')
 
   const [formData, setFormData] = useState({
     name: '',
@@ -43,6 +47,17 @@ export default function EditarEmpresaPage() {
     zip_code: '',
     delivery: false
   })
+
+  // Salvar dados no localStorage sempre que formData mudar (exceto na primeira carga)
+  useEffect(() => {
+    if (hasLoadedFromDB.current && businessId && storageKey.current) {
+      try {
+        localStorage.setItem(storageKey.current, JSON.stringify(formData))
+      } catch (err) {
+        console.error('Erro ao salvar dados:', err)
+      }
+    }
+  }, [formData, businessId])
 
   // Carrega categorias
   useEffect(() => {
@@ -76,6 +91,25 @@ export default function EditarEmpresaPage() {
         return
       }
 
+      // Define a chave do localStorage para esta empresa
+      storageKey.current = `${STORAGE_KEY_PREFIX}${partner.businessId}`
+
+      // Verificar se há dados salvos no localStorage
+      try {
+        const saved = localStorage.getItem(storageKey.current)
+        if (saved) {
+          const parsedData = JSON.parse(saved)
+          setBusinessId(partner.businessId)
+          setFormData(parsedData)
+          hasLoadedFromDB.current = true
+          console.log('Dados restaurados do localStorage')
+          return // Usar dados salvos ao invés de buscar do banco
+        }
+      } catch (err) {
+        console.error('Erro ao carregar dados salvos:', err)
+      }
+
+      // Se não há dados salvos, buscar do banco
       const { data, error } = await supabase
         .from('businesses')
         .select('*')
@@ -107,6 +141,7 @@ export default function EditarEmpresaPage() {
           zip_code: data.zip_code || '',
           delivery: data.delivery || false
         })
+        hasLoadedFromDB.current = true
       }
     }
 
@@ -189,6 +224,15 @@ export default function EditarEmpresaPage() {
         .eq('id', businessId)
 
       if (error) throw error
+
+      // Limpar dados salvos do localStorage após salvar com sucesso
+      try {
+        if (storageKey.current) {
+          localStorage.removeItem(storageKey.current)
+        }
+      } catch (err) {
+        console.error('Erro ao limpar dados salvos:', err)
+      }
 
       toast.success('Empresa atualizada com sucesso!')
       router.push('/dashboard')

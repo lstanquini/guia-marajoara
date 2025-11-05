@@ -105,12 +105,17 @@ export const slugToIconMap: Record<string, LucideIcon> = {
 }
 
 // Função para pegar ícone baseado no slug
-export function getIconBySlug(slug: string): LucideIcon | null {
+export function getIconBySlug(slug: string | null | undefined): LucideIcon | null {
+  // Validação: retorna null se slug for vazio, null ou undefined
+  if (!slug || typeof slug !== 'string') {
+    return null
+  }
+
   // Primeiro tenta o slug exato
   if (slugToIconMap[slug]) {
     return slugToIconMap[slug]
   }
-  
+
   // Tenta variações do slug
   const variations = [
     slug.replace(/-/g, ''), // Remove hífens

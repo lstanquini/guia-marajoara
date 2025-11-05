@@ -5,6 +5,9 @@ import { getApprovalEmail } from '@/lib/email/templates/approval'
 export const runtime = 'nodejs' // Força Node.js runtime para usar Nodemailer
 
 
+// Força Node.js runtime para usar Nodemailer (não funciona no Edge Runtime)
+export const runtime = 'nodejs'
+
 export async function POST(request: NextRequest) {
   try {
     console.log('🚀 ===== INÍCIO =====')

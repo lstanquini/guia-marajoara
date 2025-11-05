@@ -65,20 +65,33 @@ export default function RegisterPage() {
   // Verificar se email já existe
   const checkDuplicateEmail = async (email: string): Promise<boolean> => {
     try {
-      const { data, error } = await supabase
+      const emailNormalized = email.toLowerCase().trim()
+
+      // Verificar na tabela businesses
+      const { data: businessData } = await supabase
         .from('businesses')
         .select('id')
-        .eq('responsible_email', email.toLowerCase().trim())
-        .single()
+        .eq('responsible_email', emailNormalized)
+        .maybeSingle()
 
-      if (error && error.code !== 'PGRST116') {
-        console.error('Erro ao verificar email:', error)
-        return false
+      if (businessData) {
+        return true // Email já cadastrado
       }
 
-      return !!data
+      // Verificar na tabela partners (usuário pode existir sem empresa ativa)
+      const { data: partnerData } = await supabase
+        .from('partners')
+        .select('user_id, businesses!inner(responsible_email)')
+        .eq('businesses.responsible_email', emailNormalized)
+        .maybeSingle()
+
+      if (partnerData) {
+        return true // Email tem partner associado
+      }
+
+      return false
     } catch (err) {
-      console.error('Erro:', err)
+      console.error('Erro ao verificar email:', err)
       return false
     }
   }

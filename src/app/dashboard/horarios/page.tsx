@@ -31,14 +31,14 @@ const DAYS = [
 
 export default function HorariosPage() {
   const { user, loading: authLoading } = useAuth()
-  const { isPartner, loading: partnerLoading } = usePartner()
+  const { isPartner, partner, loading: partnerLoading } = usePartner()
   const router = useRouter()
   const toast = useToast()
   const supabase = createClientComponentClient()
-  
+
   const [loading, setLoading] = useState(false)
   const [businessId, setBusinessId] = useState<string | null>(null)
-  
+
   const [schedule, setSchedule] = useState<Schedule>({
     monday: { open: '09:00', close: '18:00', closed: false },
     tuesday: { open: '09:00', close: '18:00', closed: false },
@@ -51,18 +51,30 @@ export default function HorariosPage() {
 
   useEffect(() => {
     if (authLoading || partnerLoading) return
-    
-    if (!user || !isPartner) {
+
+    if (!user || !isPartner || !partner) {
       router.push('/login')
       return
     }
 
     async function loadBusiness() {
-      const { data } = await supabase
+      if (!partner?.businessId) {
+        console.error('Business ID não encontrado')
+        toast.error('Empresa não encontrada')
+        return
+      }
+
+      const { data, error } = await supabase
         .from('businesses')
         .select('id, opening_hours')
-        .eq('user_id', user?.id)
+        .eq('id', partner.businessId)
         .single()
+
+      if (error) {
+        console.error('Erro ao carregar business:', error)
+        toast.error('Erro ao carregar horários da empresa')
+        return
+      }
 
       if (data) {
         setBusinessId(data.id)
@@ -73,7 +85,7 @@ export default function HorariosPage() {
     }
 
     loadBusiness()
-  }, [user, isPartner, router, supabase, authLoading, partnerLoading])
+  }, [user, isPartner, partner, router, supabase, authLoading, partnerLoading, toast])
 
   const handleDayChange = (day: string, field: keyof DaySchedule, value: string | boolean) => {
     setSchedule({

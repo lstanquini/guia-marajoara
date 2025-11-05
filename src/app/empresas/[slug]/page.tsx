@@ -89,15 +89,15 @@ const BusinessHeader = ({ business }: { business: Business }) => {
   return (
     <header className="relative h-[300px] md:h-[400px]">
       <div className="absolute inset-0 bg-gradient-to-br from-slate-200 to-slate-300">
-        {bannerUrl && <Image src={bannerUrl} alt={`Banner de ${business.name}`} fill className="object-cover" priority />}
+        {bannerUrl && <Image src={bannerUrl} alt={`Banner de ${business.name}`} fill className="object-contain md:object-cover" priority />}
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
       </div>
-      
+
       <div className="absolute inset-0 flex items-end p-4 md:p-8">
         <div className="container mx-auto max-w-6xl">
           <div className="flex flex-col md:flex-row md:items-end gap-4 md:gap-6">
-            <div className="w-24 h-24 md:w-32 md:h-32 bg-white rounded-2xl shadow-2xl border-4 border-white flex items-center justify-center text-5xl md:text-6xl flex-shrink-0 relative overflow-hidden">
-              {logoUrl ? <Image src={logoUrl} alt={`Logo de ${business.name}`} fill className="object-contain p-2" /> : '🏪'}
+            <div className="w-24 h-24 md:w-32 md:h-32 bg-white rounded-2xl shadow-2xl flex items-center justify-center text-5xl md:text-6xl flex-shrink-0 relative overflow-hidden">
+              {logoUrl ? <Image src={logoUrl} alt={`Logo de ${business.name}`} fill className="object-contain p-3" /> : '🏪'}
             </div>
             
             <div className="flex-1 pb-2">

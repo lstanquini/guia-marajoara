@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { FileText, CheckCircle, XCircle, AlertCircle } from 'lucide-react'
 import { validateDocument, formatDocument } from '@/lib/validators/document'
 
@@ -12,12 +12,12 @@ interface DocumentInputProps {
   required?: boolean
 }
 
-export function DocumentInput({ 
-  value, 
-  onChange, 
+export function DocumentInput({
+  value,
+  onChange,
   onCheckDuplicate,
   disabled = false,
-  required = false 
+  required = false
 }: DocumentInputProps) {
   const [validation, setValidation] = useState<{
     valid: boolean
@@ -33,6 +33,9 @@ export function DocumentInput({
     duplicate: false
   })
 
+  // Rastrear último valor validado para evitar validações duplicadas
+  const lastValidatedValue = useRef<string>('')
+
   useEffect(() => {
     const checkDocument = async () => {
       // Se vazio, resetar validação
@@ -45,6 +48,12 @@ export function DocumentInput({
           duplicate: false
         })
         onChange('', false, null)
+        lastValidatedValue.current = ''
+        return
+      }
+
+      // Se for o mesmo valor que já validamos, não validar novamente
+      if (value === lastValidatedValue.current) {
         return
       }
 
@@ -72,27 +81,29 @@ export function DocumentInput({
           duplicate: false
         })
         onChange(result.clean, false, result.type)
+        lastValidatedValue.current = value
         return
       }
 
       // Se válido E tem função de verificar duplicidade
       if (result.valid && onCheckDuplicate) {
         setValidation(prev => ({ ...prev, checking: true, message: 'Verificando...' }))
-        
+
         try {
           const isDuplicate = await onCheckDuplicate(result.clean)
-          
+
           setValidation({
             valid: !isDuplicate,
             type: result.type,
-            message: isDuplicate 
-              ? `Este ${result.type} já está cadastrado` 
+            message: isDuplicate
+              ? `Este ${result.type} já está cadastrado`
               : `${result.type} válido`,
             checking: false,
             duplicate: isDuplicate
           })
-          
+
           onChange(result.clean, !isDuplicate, result.type)
+          lastValidatedValue.current = value
         } catch (error) {
           console.error('Erro ao verificar duplicidade:', error)
           setValidation({
@@ -103,6 +114,7 @@ export function DocumentInput({
             duplicate: false
           })
           onChange(result.clean, true, result.type)
+          lastValidatedValue.current = value
         }
         return
       }
@@ -117,13 +129,14 @@ export function DocumentInput({
           duplicate: false
         })
         onChange(result.clean, true, result.type)
+        lastValidatedValue.current = value
       }
     }
 
     // Debounce: espera 500ms após parar de digitar
     const timer = setTimeout(checkDocument, 500)
     return () => clearTimeout(timer)
-  }, [value, onCheckDuplicate]) // onChange removido para evitar loop
+  }, [value]) // Removido onCheckDuplicate das dependências
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const formatted = formatDocument(e.target.value)

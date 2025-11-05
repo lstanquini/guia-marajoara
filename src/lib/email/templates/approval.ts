@@ -43,7 +43,7 @@ export function getApprovalEmail(data: ApprovalEmailData) {
   }
 
   return {
-    subject: `🎉 ${data.businessName} - Empresa Aprovada no Guia Marajoara!`,
+    subject: `🎉 ${data.businessName} - Empresa Aprovada no MarajoaraON!`,
     html: `
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -198,7 +198,7 @@ export function getApprovalEmail(data: ApprovalEmailData) {
     <div class="content">
       <p style="font-size: 16px;">Olá <strong>${data.responsibleName}</strong>,</p>
       
-      <p>É com grande satisfação que informamos que a empresa <strong>${data.businessName}</strong> foi aprovada no <strong>Guia Marajoara</strong>! 🎊</p>
+      <p>É com grande satisfação que informamos que a empresa <strong>${data.businessName}</strong> foi aprovada no <strong>MarajoaraON</strong>! 🎊</p>
       
       <div class="plan-box">
         <div class="plan-title">📋 Plano ${planInfo.name}</div>
@@ -240,11 +240,11 @@ export function getApprovalEmail(data: ApprovalEmailData) {
       
       <p style="margin-top: 30px;">Se tiver qualquer dúvida, responda este email ou entre em contato conosco.</p>
       
-      <p><strong>Bem-vindo à família Guia Marajoara!</strong> 🤝</p>
+      <p><strong>Bem-vindo à família MarajoaraON!</strong> 🤝</p>
     </div>
     
     <div class="footer">
-      <p style="font-weight: bold; font-size: 14px; margin-bottom: 5px;">Guia Marajoara</p>
+      <p style="font-weight: bold; font-size: 14px; margin-bottom: 5px;">MarajoaraON</p>
       <p>Conectando negócios locais aos clientes</p>
       <p style="margin-top: 15px; color: #999;">Este é um email automático, mas você pode responder se precisar de ajuda.</p>
     </div>

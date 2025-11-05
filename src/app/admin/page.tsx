@@ -187,11 +187,19 @@ const approveBusiness = async () => {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${session.access_token}`
       },
-      body: JSON.stringify({ 
+      body: JSON.stringify({
         businessId: businessToApprove.id,
         planType: selectedPlan
       })
     })
+
+    // Verificar se a resposta é JSON
+    const contentType = response.headers.get('content-type')
+    if (!contentType || !contentType.includes('application/json')) {
+      const text = await response.text()
+      console.error('❌ Resposta não é JSON:', text.substring(0, 200))
+      throw new Error('Erro no servidor. A API retornou HTML em vez de JSON. Verifique os logs do servidor.')
+    }
 
     const data = await response.json()
 

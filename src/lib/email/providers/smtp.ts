@@ -1,5 +1,3 @@
-// @ts-ignore
-import nodemailer from 'nodemailer'
 import { emailConfig } from '../config'
 
 export async function sendEmailViaSMTP(
@@ -7,7 +5,10 @@ export async function sendEmailViaSMTP(
   subject: string,
   html: string
 ) {
-  const transporter = nodemailer.createTransport(emailConfig.smtp)
+  // Importação dinâmica do Nodemailer para garantir compatibilidade com Node.js runtime
+  const nodemailer = await import('nodemailer')
+
+  const transporter = nodemailer.default.createTransport(emailConfig.smtp)
 
   await transporter.sendMail({
     from: `${emailConfig.from.name} <${emailConfig.from.email}>`,

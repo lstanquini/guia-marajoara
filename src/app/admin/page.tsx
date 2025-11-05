@@ -612,6 +612,16 @@ const approveBusiness = async () => {
                           <Link href={`/empresas/${business.slug}`} target="_blank" className="p-2 text-blue-600 hover:bg-blue-50 rounded" title="Ver página">
                             <Eye size={18} />
                           </Link>
+                          {business.status === 'pending' && (
+                            <>
+                              <button onClick={() => openApprovalModal(business)} className="p-2 text-green-600 hover:bg-green-50 rounded" title="Aprovar">
+                                <CheckCircle size={18} />
+                              </button>
+                              <button onClick={() => rejectBusiness(business.id, business.name)} className="p-2 text-red-600 hover:bg-red-50 rounded" title="Rejeitar">
+                                <XCircle size={18} />
+                              </button>
+                            </>
+                          )}
                           {business.status === 'approved' && (
                             <button onClick={() => deactivateBusiness(business.id, business.name)} className="p-2 text-red-600 hover:bg-red-50 rounded" title="Desativar">
                               <Ban size={18} />

@@ -11,24 +11,24 @@ import { Upload, Image as ImageIcon, X, Monitor, Smartphone } from 'lucide-react
 
 export default function ImagensPage() {
   const { user, loading: authLoading } = useAuth()
-  const { isPartner, loading: partnerLoading } = usePartner()
+  const { isPartner, partner, loading: partnerLoading } = usePartner()
   const router = useRouter()
   const toast = useToast()
   const supabase = createClientComponentClient()
-  
+
   const [loading, setLoading] = useState(false)
   const [businessId, setBusinessId] = useState<string | null>(null)
-  
+
   // URLs atuais no banco
   const [logoUrl, setLogoUrl] = useState<string>('')
   const [bannerUrl, setBannerUrl] = useState<string>('')
   const [bannerMobileUrl, setBannerMobileUrl] = useState<string>('')
-  
+
   // Previews
   const [logoPreview, setLogoPreview] = useState<string>('')
   const [bannerPreview, setBannerPreview] = useState<string>('')
   const [bannerMobilePreview, setBannerMobilePreview] = useState<string>('')
-  
+
   // Arquivos selecionados
   const [logoFile, setLogoFile] = useState<File | null>(null)
   const [bannerFile, setBannerFile] = useState<File | null>(null)
@@ -36,18 +36,30 @@ export default function ImagensPage() {
 
   useEffect(() => {
     if (authLoading || partnerLoading) return
-    
-    if (!user || !isPartner) {
+
+    if (!user || !isPartner || !partner) {
       router.push('/login')
       return
     }
 
     async function loadBusiness() {
-      const { data } = await supabase
+      if (!partner?.businessId) {
+        console.error('Business ID não encontrado')
+        toast.error('Empresa não encontrada')
+        return
+      }
+
+      const { data, error } = await supabase
         .from('businesses')
         .select('id, logo_url, banner_url, banner_mobile_url')
-        .eq('user_id', user?.id)
+        .eq('id', partner.businessId)
         .single()
+
+      if (error) {
+        console.error('Erro ao carregar business:', error)
+        toast.error('Erro ao carregar dados da empresa')
+        return
+      }
 
       if (data) {
         setBusinessId(data.id)
@@ -61,7 +73,7 @@ export default function ImagensPage() {
     }
 
     loadBusiness()
-  }, [user, isPartner, router, supabase, authLoading, partnerLoading])
+  }, [user, isPartner, partner, router, supabase, authLoading, partnerLoading, toast])
 
   const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -144,17 +156,26 @@ export default function ImagensPage() {
       if (logoFile) {
         const fileExt = logoFile.name.split('.').pop()
         const fileName = `logos/${businessId}-${Date.now()}.${fileExt}`
-        
+
+        console.log('Fazendo upload do logo:', fileName)
+
         const { error: uploadError } = await supabase.storage
           .from('business-images')
-          .upload(fileName, logoFile)
+          .upload(fileName, logoFile, {
+            cacheControl: '3600',
+            upsert: true
+          })
 
-        if (uploadError) throw uploadError
+        if (uploadError) {
+          console.error('Erro no upload do logo:', uploadError)
+          throw new Error(`Erro no upload do logo: ${uploadError.message}`)
+        }
 
         const { data: { publicUrl } } = supabase.storage
           .from('business-images')
           .getPublicUrl(fileName)
-        
+
+        console.log('Logo URL pública:', publicUrl)
         newLogoUrl = publicUrl
       }
 
@@ -162,17 +183,26 @@ export default function ImagensPage() {
       if (bannerFile) {
         const fileExt = bannerFile.name.split('.').pop()
         const fileName = `banners/${businessId}-${Date.now()}.${fileExt}`
-        
+
+        console.log('Fazendo upload do banner:', fileName)
+
         const { error: uploadError } = await supabase.storage
           .from('business-images')
-          .upload(fileName, bannerFile)
+          .upload(fileName, bannerFile, {
+            cacheControl: '3600',
+            upsert: true
+          })
 
-        if (uploadError) throw uploadError
+        if (uploadError) {
+          console.error('Erro no upload do banner:', uploadError)
+          throw new Error(`Erro no upload do banner: ${uploadError.message}`)
+        }
 
         const { data: { publicUrl } } = supabase.storage
           .from('business-images')
           .getPublicUrl(fileName)
-        
+
+        console.log('Banner URL pública:', publicUrl)
         newBannerUrl = publicUrl
       }
 
@@ -180,21 +210,37 @@ export default function ImagensPage() {
       if (bannerMobileFile) {
         const fileExt = bannerMobileFile.name.split('.').pop()
         const fileName = `banners-mobile/${businessId}-${Date.now()}.${fileExt}`
-        
+
+        console.log('Fazendo upload do banner mobile:', fileName)
+
         const { error: uploadError } = await supabase.storage
           .from('business-images')
-          .upload(fileName, bannerMobileFile)
+          .upload(fileName, bannerMobileFile, {
+            cacheControl: '3600',
+            upsert: true
+          })
 
-        if (uploadError) throw uploadError
+        if (uploadError) {
+          console.error('Erro no upload do banner mobile:', uploadError)
+          throw new Error(`Erro no upload do banner mobile: ${uploadError.message}`)
+        }
 
         const { data: { publicUrl } } = supabase.storage
           .from('business-images')
           .getPublicUrl(fileName)
-        
+
+        console.log('Banner mobile URL pública:', publicUrl)
         newBannerMobileUrl = publicUrl
       }
 
       // Atualizar no banco
+      console.log('Atualizando no banco:', {
+        businessId,
+        logo_url: newLogoUrl || null,
+        banner_url: newBannerUrl || null,
+        banner_mobile_url: newBannerMobileUrl || null
+      })
+
       const { error } = await supabase
         .from('businesses')
         .update({
@@ -205,15 +251,27 @@ export default function ImagensPage() {
         })
         .eq('id', businessId)
 
-      if (error) throw error
+      if (error) {
+        console.error('Erro ao atualizar no banco:', error)
+        throw new Error(`Erro ao salvar no banco: ${error.message}`)
+      }
+
+      console.log('Imagens salvas com sucesso!')
+
+      // Atualizar os states com as novas URLs
+      setLogoUrl(newLogoUrl)
+      setBannerUrl(newBannerUrl)
+      setBannerMobileUrl(newBannerMobileUrl)
 
       toast.success('Imagens atualizadas com sucesso!')
+
+      // Limpar arquivos selecionados
       setLogoFile(null)
       setBannerFile(null)
       setBannerMobileFile(null)
     } catch (error: any) {
-      console.error('Erro:', error)
-      toast.error('Erro ao atualizar imagens', error.message)
+      console.error('Erro completo:', error)
+      toast.error('Erro ao atualizar imagens', error.message || 'Erro desconhecido')
     } finally {
       setLoading(false)
     }

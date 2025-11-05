@@ -1,7 +1,7 @@
 export const emailConfig = {
   // Trocar aqui quando mudar de email
   from: {
-    name: 'Guia Marajoara',
+    name: 'MarajoaraON',
     email: process.env.EMAIL_FROM || 'noreply@guiamarajoara.com'
   },
   

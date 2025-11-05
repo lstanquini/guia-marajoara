@@ -12,10 +12,12 @@ interface Category {
   name: string
 }
 
+const STORAGE_KEY = 'cadastro-empresa-draft'
+
 export default function RegisterPage() {
   const router = useRouter()
   const supabase = createClientComponentClient()
-  
+
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState('')
@@ -33,6 +35,28 @@ export default function RegisterPage() {
   })
 
   const [documentValid, setDocumentValid] = useState(false)
+
+  // Carregar dados salvos do localStorage ao montar
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY)
+      if (saved) {
+        const parsedData = JSON.parse(saved)
+        setFormData(parsedData)
+      }
+    } catch (err) {
+      console.error('Erro ao carregar dados salvos:', err)
+    }
+  }, [])
+
+  // Salvar dados no localStorage sempre que formData mudar
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(formData))
+    } catch (err) {
+      console.error('Erro ao salvar dados:', err)
+    }
+  }, [formData])
 
   // Carregar categorias
   useEffect(() => {
@@ -211,7 +235,14 @@ export default function RegisterPage() {
 
       // Sucesso!
       setSuccess(true)
-      
+
+      // Limpar dados salvos do localStorage
+      try {
+        localStorage.removeItem(STORAGE_KEY)
+      } catch (err) {
+        console.error('Erro ao limpar dados salvos:', err)
+      }
+
       // Redirecionar após 3 segundos
       setTimeout(() => {
         router.push('/')

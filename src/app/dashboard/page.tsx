@@ -37,6 +37,11 @@ export default function DashboardPage() {
     plan_type: string
   } | null>(null)
   const [loadingBusiness, setLoadingBusiness] = useState(true)
+  const [stats, setStats] = useState({
+    totalViews: 0,
+    totalRedemptions: 0
+  })
+  const [loadingStats, setLoadingStats] = useState(true)
 
   // Redireciona se não estiver autenticado
   useEffect(() => {
@@ -89,6 +94,31 @@ export default function DashboardPage() {
     }
 
     loadRecentCoupons()
+  }, [partner, supabase])
+
+  // Carregar estatísticas (visitas e resgates)
+  useEffect(() => {
+    if (!partner) return
+
+    async function loadStats() {
+      const { data, error } = await supabase
+        .from('coupons')
+        .select('views_count, redemptions_count')
+        .eq('business_id', partner?.businessId)
+
+      if (!error && data) {
+        const totalViews = data.reduce((sum, coupon) => sum + (coupon.views_count || 0), 0)
+        const totalRedemptions = data.reduce((sum, coupon) => sum + (coupon.redemptions_count || 0), 0)
+
+        setStats({
+          totalViews,
+          totalRedemptions
+        })
+      }
+      setLoadingStats(false)
+    }
+
+    loadStats()
   }, [partner, supabase])
 
   if (authLoading || partnerLoading) {
@@ -191,9 +221,8 @@ export default function DashboardPage() {
   }
 
   const activeCoupons = recentCoupons.filter(c => c.status === 'active').length
-  const totalViews = 1247
-  const totalRedemptions = 89
-  
+  const { totalViews, totalRedemptions } = stats
+
   const businessName = businessData.name
   const businessSlug = businessData.slug
   const planType = businessData.plan_type

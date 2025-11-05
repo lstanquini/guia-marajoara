@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/contexts/auth-context'
 import { usePartner } from '@/hooks/usePartner'
+import { useAdmin } from '@/hooks/useAdmin'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { Tag, Eye, Calendar, FileText, Image as ImageIcon, Clock, ExternalLink, CreditCard } from 'lucide-react'
 
@@ -24,9 +25,10 @@ interface Coupon {
 export default function DashboardPage() {
   const { user, loading: authLoading, signOut } = useAuth()
   const { partner, loading: partnerLoading, isPartner } = usePartner()
+  const { isAdmin, loading: adminLoading } = useAdmin()
   const router = useRouter()
   const supabase = createClientComponentClient()
-  
+
   const [recentCoupons, setRecentCoupons] = useState<Coupon[]>([])
   const [loadingCoupons, setLoadingCoupons] = useState(true)
   const [businessData, setBusinessData] = useState<{
@@ -36,11 +38,19 @@ export default function DashboardPage() {
   } | null>(null)
   const [loadingBusiness, setLoadingBusiness] = useState(true)
 
+  // Redireciona se não estiver autenticado
   useEffect(() => {
     if (!authLoading && !user) {
       router.push('/login')
     }
   }, [user, authLoading, router])
+
+  // Redireciona admin para /admin
+  useEffect(() => {
+    if (!authLoading && !adminLoading && user && isAdmin) {
+      router.push('/admin')
+    }
+  }, [user, isAdmin, authLoading, adminLoading, router])
 
   useEffect(() => {
     if (!partner) return

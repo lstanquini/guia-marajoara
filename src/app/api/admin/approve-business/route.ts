@@ -3,6 +3,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { sendEmail } from '@/lib/email/providers'
 import { getApprovalEmail } from '@/lib/email/templates/approval'
 
+// Força Node.js runtime para usar Nodemailer (não funciona no Edge Runtime)
+export const runtime = 'nodejs'
+
 export async function POST(request: NextRequest) {
   try {
     console.log('🚀 ===== INÍCIO =====')

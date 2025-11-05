@@ -2,6 +2,8 @@ import { createClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
 import { sendEmail } from '@/lib/email/providers'
 import { getApprovalEmail } from '@/lib/email/templates/approval'
+export const runtime = 'nodejs' // Força Node.js runtime para usar Nodemailer
+
 
 export async function POST(request: NextRequest) {
   try {

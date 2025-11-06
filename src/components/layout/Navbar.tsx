@@ -61,10 +61,10 @@ export function Navbar() {
               <Image
                 src="/images/logo-navbar.png"
                 alt="MarajoaraON"
-                width={180}
-                height={50}
+                width={240}
+                height={72}
                 priority
-                className="h-10 w-auto"
+                className="h-14 md:h-16 w-auto"
               />
             </Link>
 

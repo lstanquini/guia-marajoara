@@ -139,10 +139,8 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
       >
         {/* HEADER */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-          <div className="flex items-center gap-1.5 text-lg font-bold tracking-tight">
-            <span className="text-[#C2227A]">Jardim</span>
-            <span className="text-gray-300">•</span>
-            <span className="text-[#7CB342]">Marajoara</span>
+          <div className="text-lg font-bold tracking-tight">
+            <span className="text-[#C2227A]">MarajoaraON</span>
           </div>
           
           <button

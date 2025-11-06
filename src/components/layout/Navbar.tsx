@@ -59,7 +59,7 @@ export function Navbar() {
           <div className="flex items-center justify-between">
             <Link href="/" className="flex items-center hover:opacity-80 transition-opacity">
               <Image
-                src="/logo.png"
+                src="/logo-navbar.png"
                 alt="MarajoaraON"
                 width={180}
                 height={50}

@@ -90,24 +90,43 @@ function BusinessCard({ business }: { business: Business }) {
       href={`/empresas/${business.slug}`}
       className="group bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100 h-full flex flex-col"
     >
-      {/* Banner da empresa - maior no mobile */}
-      <div className={`relative h-56 md:h-48 flex-shrink-0 ${
-        !bannerUrl ? generateGradient(business.slug) : 'bg-gray-200'
-      }`}>
-        {bannerUrl && (
-          <Image
-            src={bannerUrl}
-            alt={`Banner de ${business.name}`}
-            fill
-            className="object-contain"
-          />
-        )}
-        
+      {/* Banner da empresa com proporção correta */}
+      <div className="relative flex-shrink-0">
+        {/* Mobile: 16:9 aspect ratio */}
+        <div className={`relative w-full md:hidden ${
+          !bannerUrl ? generateGradient(business.slug) : 'bg-gray-200'
+        }`} style={{ aspectRatio: '16 / 9' }}>
+          {bannerUrl && (
+            <Image
+              src={bannerUrl}
+              alt={`Banner de ${business.name}`}
+              fill
+              className="object-cover"
+              sizes="100vw"
+            />
+          )}
+        </div>
+
+        {/* Desktop: 16:5 aspect ratio (1920x600) */}
+        <div className={`relative w-full hidden md:block ${
+          !bannerUrl ? generateGradient(business.slug) : 'bg-gray-200'
+        }`} style={{ aspectRatio: '16 / 5' }}>
+          {bannerUrl && (
+            <Image
+              src={bannerUrl}
+              alt={`Banner de ${business.name}`}
+              fill
+              className="object-cover"
+              sizes="33vw"
+            />
+          )}
+        </div>
+
         {/* Badge "Novo" ou "Novo Cupom" */}
-        <div className="absolute top-3 right-3">
+        <div className="absolute top-3 right-3 z-10">
           <span className={`px-3 py-1.5 text-xs font-semibold rounded-full ${
-            business.has_active_coupons 
-              ? 'bg-green-500 text-white' 
+            business.has_active_coupons
+              ? 'bg-green-500 text-white'
               : 'bg-blue-500 text-white'
           }`}>
             {business.has_active_coupons ? 'Novo Cupom' : 'Novo'}

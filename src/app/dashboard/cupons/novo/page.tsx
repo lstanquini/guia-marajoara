@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { usePartner } from '@/hooks/usePartner'
@@ -8,16 +8,19 @@ import { useToast } from '@/contexts/toast-context'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { ArrowLeft } from 'lucide-react'
 
+const STORAGE_KEY = 'novo-cupom-draft'
+
 export default function NovoCupomPage() {
   const { partner } = usePartner()
   const router = useRouter()
   const toast = useToast()
   const supabase = createClientComponentClient()
-  
+  const hasLoadedFromStorage = useRef(false)
+
   const [loading, setLoading] = useState(false)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [imageFile, setImageFile] = useState<File | null>(null)
-  
+
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -28,6 +31,35 @@ export default function NovoCupomPage() {
     is_unlimited: true,
     max_redemptions: 0
   })
+
+  // Carregar dados salvos do localStorage ao montar
+  useEffect(() => {
+    if (hasLoadedFromStorage.current) return
+
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY)
+      if (saved) {
+        const parsedData = JSON.parse(saved)
+        setFormData(parsedData)
+        console.log('Dados restaurados do localStorage')
+      }
+    } catch (err) {
+      console.error('Erro ao carregar dados salvos:', err)
+    }
+
+    hasLoadedFromStorage.current = true
+  }, [])
+
+  // Salvar dados no localStorage sempre que formData mudar
+  useEffect(() => {
+    if (!hasLoadedFromStorage.current) return
+
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(formData))
+    } catch (err) {
+      console.error('Erro ao salvar dados:', err)
+    }
+  }, [formData])
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -95,6 +127,9 @@ export default function NovoCupomPage() {
         })
 
       if (insertError) throw insertError
+
+      // Limpar dados salvos após sucesso
+      localStorage.removeItem(STORAGE_KEY)
 
       toast.success('Cupom criado como rascunho', 'Ative-o na listagem quando estiver pronto')
       router.push('/dashboard/cupons')

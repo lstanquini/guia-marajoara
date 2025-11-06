@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/contexts/auth-context'
@@ -29,12 +29,15 @@ const DAYS = [
   { key: 'sunday', label: 'Domingo', short: 'Dom' }
 ]
 
+const STORAGE_KEY = 'editar-horarios-draft'
+
 export default function HorariosPage() {
   const { user, loading: authLoading } = useAuth()
   const { isPartner, partner, loading: partnerLoading } = usePartner()
   const router = useRouter()
   const toast = useToast()
   const supabase = createClientComponentClient()
+  const hasLoadedFromStorage = useRef(false)
 
   const [loading, setLoading] = useState(false)
   const [businessId, setBusinessId] = useState<string | null>(null)
@@ -78,14 +81,43 @@ export default function HorariosPage() {
 
       if (data) {
         setBusinessId(data.id)
-        if (data.opening_hours && Object.keys(data.opening_hours).length > 0) {
-          setSchedule(data.opening_hours)
+
+        const dbData = data.opening_hours && Object.keys(data.opening_hours).length > 0
+          ? data.opening_hours
+          : schedule
+
+        // Verificar se há rascunho salvo no localStorage
+        try {
+          const saved = localStorage.getItem(STORAGE_KEY)
+          if (saved && !hasLoadedFromStorage.current) {
+            const parsedData = JSON.parse(saved)
+            setSchedule(parsedData)
+            console.log('Horários restaurados do localStorage')
+          } else {
+            setSchedule(dbData)
+          }
+        } catch (err) {
+          console.error('Erro ao carregar dados salvos:', err)
+          setSchedule(dbData)
         }
+
+        hasLoadedFromStorage.current = true
       }
     }
 
     loadBusiness()
   }, [user, isPartner, partner, router, supabase, authLoading, partnerLoading, toast])
+
+  // Salvar dados no localStorage sempre que schedule mudar
+  useEffect(() => {
+    if (!hasLoadedFromStorage.current) return
+
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(schedule))
+    } catch (err) {
+      console.error('Erro ao salvar dados:', err)
+    }
+  }, [schedule])
 
   const handleDayChange = (day: string, field: keyof DaySchedule, value: string | boolean) => {
     setSchedule({
@@ -125,6 +157,9 @@ export default function HorariosPage() {
         .eq('id', businessId)
 
       if (error) throw error
+
+      // Limpar rascunho salvo após sucesso
+      localStorage.removeItem(STORAGE_KEY)
 
       toast.success('Horários atualizados com sucesso!')
       router.push('/dashboard')

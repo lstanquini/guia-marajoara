@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { usePartner } from '@/hooks/usePartner'
@@ -17,7 +17,8 @@ export default function EditarCupomPage({ params }: PageProps) {
   const router = useRouter()
   const toast = useToast()
   const supabase = createClientComponentClient()
-  
+  const hasLoadedFromStorage = useRef(false)
+
   const [couponId, setCouponId] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [imagePreview, setImagePreview] = useState<string>('')
@@ -48,20 +49,50 @@ export default function EditarCupomPage({ params }: PageProps) {
         .single()
 
       if (data) {
-        setFormData({
+        const dbData = {
           title: data.title,
           description: data.description || '',
           discount_text: data.discount_text || '',
           starts_at: data.starts_at.split('T')[0],
           expires_at: data.expires_at.split('T')[0],
           status: data.status
-        })
+        }
+
+        // Verificar se há rascunho salvo no localStorage
+        const storageKey = `editar-cupom-${couponId}-draft`
+        try {
+          const saved = localStorage.getItem(storageKey)
+          if (saved && !hasLoadedFromStorage.current) {
+            const parsedData = JSON.parse(saved)
+            setFormData(parsedData)
+            console.log('Dados restaurados do localStorage')
+          } else {
+            setFormData(dbData)
+          }
+        } catch (err) {
+          console.error('Erro ao carregar dados salvos:', err)
+          setFormData(dbData)
+        }
+
         setImagePreview(data.image_url)
+        hasLoadedFromStorage.current = true
       }
     }
 
     loadCoupon()
   }, [couponId, partner, supabase])
+
+  // Salvar dados no localStorage sempre que formData mudar
+  useEffect(() => {
+    if (!couponId || !hasLoadedFromStorage.current) return
+
+    const storageKey = `editar-cupom-${couponId}-draft`
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(formData))
+    } catch (err) {
+      console.error('Erro ao salvar dados:', err)
+    }
+  }, [formData, couponId])
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -121,6 +152,10 @@ export default function EditarCupomPage({ params }: PageProps) {
         .eq('id', couponId)
 
       if (error) throw error
+
+      // Limpar rascunho salvo após sucesso
+      const storageKey = `editar-cupom-${couponId}-draft`
+      localStorage.removeItem(storageKey)
 
       toast.success('Cupom atualizado com sucesso!')
       router.push('/dashboard/cupons')

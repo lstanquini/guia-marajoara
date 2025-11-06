@@ -72,9 +72,16 @@ export function BusinessCard({ business, variant = 'default' }: BusinessCardProp
   // Pegar banner (prioriza mobile, depois desktop)
   const bannerUrl = business.banner_mobile_url || business.banner_url
 
+  // Verificar se logo_url é uma URL ou emoji
+  const isLogoUrl = business.logo_url && business.logo_url.startsWith('http')
+
   return (
     <>
-      <Card variant={variant === 'featured' ? 'feature' : 'business'}>
+      <Card
+        variant={variant === 'featured' ? 'feature' : 'business'}
+        className="cursor-pointer hover:shadow-lg transition-shadow"
+        onClick={() => window.location.href = `/empresas/${business.slug}`}
+      >
         {/* Banner no topo */}
         {bannerUrl && (
           <div className="w-full h-32 overflow-hidden rounded-t-2xl">
@@ -88,7 +95,19 @@ export function BusinessCard({ business, variant = 'default' }: BusinessCardProp
 
         <CardHeader>
           <div className="flex items-start justify-between mb-2">
-            <div className="text-3xl">{business.logo_url || categoryEmoji}</div>
+            {/* Logo: imagem ou emoji */}
+            {isLogoUrl ? (
+              <div className="w-12 h-12 rounded-full overflow-hidden flex-shrink-0">
+                <img
+                  src={business.logo_url}
+                  alt={`Logo ${business.name}`}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            ) : (
+              <div className="text-3xl">{business.logo_url || categoryEmoji}</div>
+            )}
+
             <div className="flex flex-col gap-1 items-end">
               {business.plan_type === 'premium' && (
                 <span className="bg-gradient-to-r from-[#C2227A] to-[#A01860] text-white text-xs font-semibold px-2 py-1 rounded-full">
@@ -152,7 +171,10 @@ export function BusinessCard({ business, variant = 'default' }: BusinessCardProp
             <Button
               size="sm"
               variant="whatsapp"
-              onClick={() => setModalOpen(true)}
+              onClick={(e) => {
+                e.stopPropagation()
+                setModalOpen(true)
+              }}
             >
               WhatsApp
             </Button>
@@ -160,7 +182,10 @@ export function BusinessCard({ business, variant = 'default' }: BusinessCardProp
           <Button
             size="sm"
             variant="outline"
-            onClick={() => window.location.href = `/empresas/${business.slug}`}
+            onClick={(e) => {
+              e.stopPropagation()
+              window.location.href = `/empresas/${business.slug}`
+            }}
           >
             Ver mais
           </Button>

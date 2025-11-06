@@ -7,7 +7,7 @@ import { useAuth } from '@/contexts/auth-context'
 import { usePartner } from '@/hooks/usePartner'
 import { useAdmin } from '@/hooks/useAdmin'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
-import { Tag, Eye, Calendar, FileText, Image as ImageIcon, Clock, ExternalLink, CreditCard } from 'lucide-react'
+import { Tag, Eye, Calendar, FileText, Image as ImageIcon, Clock, ExternalLink, CreditCard, Star } from 'lucide-react'
 
 interface Coupon {
   id: string
@@ -357,6 +357,17 @@ export default function DashboardPage() {
                   <p className="text-xs text-gray-500 truncate">Funcionamento</p>
                 </div>
                 <span className="text-purple-600 text-lg flex-shrink-0">→</span>
+              </Link>
+
+              <Link href="/dashboard/google-avaliacoes" className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg active:bg-gray-50">
+                <div className="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center flex-shrink-0">
+                  <Star className="w-5 h-5 text-yellow-600" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-sm font-semibold truncate">Avaliações Google</h3>
+                  <p className="text-xs text-gray-500 truncate">Vincular ao Google</p>
+                </div>
+                <span className="text-yellow-600 text-lg flex-shrink-0">→</span>
               </Link>
 
               <Link href={`/empresas/${businessSlug}`} target="_blank" className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg active:bg-gray-50">

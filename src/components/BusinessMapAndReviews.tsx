@@ -33,22 +33,25 @@ export function BusinessMapAndReviews({
 
   return (
     <div className="space-y-8">
-      {/* Mapa */}
+      {/* Mapa - Maior e mais proeminente */}
       <section className="bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-200">
-        <div className="p-8">
-          <h2 className="text-2xl font-bold text-slate-800 mb-4">Localização</h2>
+        <div className="p-6 md:p-8">
+          <h2 className="text-2xl font-bold text-slate-800 mb-4">Localização e Avaliações</h2>
           <div className="flex items-start gap-2 text-slate-600 mb-4">
             <MapPin className="w-5 h-5 mt-0.5 flex-shrink-0 text-[#C2227A]" />
             <p className="font-medium">{address}</p>
           </div>
         </div>
 
-        <GoogleMapComponent
-          address={address}
-          businessName={businessName}
-          lat={finalLat}
-          lng={finalLng}
-        />
+        {/* Mapa responsivo */}
+        <div className="w-full">
+          <GoogleMapComponent
+            address={address}
+            businessName={businessName}
+            lat={finalLat}
+            lng={finalLng}
+          />
+        </div>
       </section>
 
       {/* Avaliações do Google */}

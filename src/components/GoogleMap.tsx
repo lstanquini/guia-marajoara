@@ -11,10 +11,11 @@ interface GoogleMapComponentProps {
   lng?: number
 }
 
+// Mapa maior e responsivo
 const mapContainerStyle = {
   width: '100%',
-  height: '400px',
-  borderRadius: '12px'
+  height: '500px', // Aumentado de 400px para 500px
+  borderRadius: '0'
 }
 
 const defaultCenter = {

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { cn } from '@/lib/utils'
 import { MobileMenu } from '@/components/layout/MobileMenu'
 import { useAuth } from '@/contexts/auth-context'
@@ -56,10 +57,15 @@ export function Navbar() {
       <nav className={cn('bg-white border-b border-gray-100 sticky top-0 z-30 transition-all duration-300', scrolled ? 'py-3 shadow-md' : 'py-4')}>
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between">
-            <Link href="/" className="flex items-center gap-2 text-xl font-bold hover:opacity-80 transition-opacity">
-              <span className="text-[#00BCD4]">Jardim</span>
-              <span className="text-[#C2227A]">Marajoara</span>
-              <span className="text-[#7CB342]">SP</span>
+            <Link href="/" className="flex items-center hover:opacity-80 transition-opacity">
+              <Image
+                src="/images/logo-navbar.png"
+                alt="MarajoaraON"
+                width={180}
+                height={50}
+                priority
+                className="h-10 w-auto"
+              />
             </Link>
 
             <ul className="hidden md:flex items-center gap-8" role="menu">

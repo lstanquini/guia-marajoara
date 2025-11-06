@@ -158,7 +158,15 @@ export default async function EmpresaPage({ params }: { params: Promise<{ slug: 
 
   const fullAddress = `${business.address}${business.address_number ? `, ${business.address_number}` : ''}${business.neighborhood ? ` - ${business.neighborhood}` : ''}, ${business.city} - ${business.state}`;
 
+  // Mapeamento de dias (inglês e português para nome completo)
   const dayNames: Record<string, string> = {
+    'monday': 'Segunda-feira',
+    'tuesday': 'Terça-feira',
+    'wednesday': 'Quarta-feira',
+    'thursday': 'Quinta-feira',
+    'friday': 'Sexta-feira',
+    'saturday': 'Sábado',
+    'sunday': 'Domingo',
     'segunda': 'Segunda-feira',
     'terca': 'Terça-feira',
     'quarta': 'Quarta-feira',
@@ -166,6 +174,18 @@ export default async function EmpresaPage({ params }: { params: Promise<{ slug: 
     'sexta': 'Sexta-feira',
     'sabado': 'Sábado',
     'domingo': 'Domingo'
+  };
+
+  // Ordem correta dos dias (segunda a domingo)
+  const dayOrder = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday', 'segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado', 'domingo'];
+
+  // Função para ordenar os horários
+  const getSortedHours = (hours: Record<string, any>) => {
+    return Object.entries(hours).sort(([dayA], [dayB]) => {
+      const indexA = dayOrder.indexOf(dayA.toLowerCase());
+      const indexB = dayOrder.indexOf(dayB.toLowerCase());
+      return indexA - indexB;
+    });
   };
   
   return (
@@ -199,11 +219,12 @@ export default async function EmpresaPage({ params }: { params: Promise<{ slug: 
               <section className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
                 <h2 className="text-2xl font-bold text-slate-800 mb-6">Horários</h2>
                 <div className="space-y-3">
-                  {Object.entries(business.opening_hours).map(([day, hours]: [string, any]) => {
+                  {getSortedHours(business.opening_hours).map(([day, hours]: [string, any]) => {
                     const schedule = hours as { open: string; close: string; closed: boolean }
+                    const dayKey = day.toLowerCase();
                     return (
                       <div key={day} className="flex justify-between items-center py-3 border-b border-slate-100 last:border-0">
-                        <span className="text-slate-600 font-medium capitalize">{dayNames[day] || day}</span>
+                        <span className="text-slate-600 font-medium">{dayNames[dayKey] || day}</span>
                         <span className="text-slate-900 font-semibold">
                           {schedule.closed ? 'Fechado' : `${schedule.open} - ${schedule.close}`}
                         </span>

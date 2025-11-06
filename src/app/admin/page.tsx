@@ -16,7 +16,7 @@ interface Business {
   category_main: string
   category_sub: string | null
   description: string | null
-  status: 'pending' | 'approved' | 'rejected'
+  status: 'pending' | 'approved' | 'suspended' | 'cancelled'
   created_at: string
   
   // NOVOS: Dados do responsável
@@ -69,7 +69,7 @@ export default function AdminPage() {
 
   const [businesses, setBusinesses] = useState<Business[]>([])
   const [loading, setLoading] = useState(true)
-  const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all')
+  const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'suspended' | 'cancelled'>('all')
   const [showCredentialsModal, setShowCredentialsModal] = useState(false)
   const [credentials, setCredentials] = useState<ApprovalCredentials | null>(null)
   const [copiedField, setCopiedField] = useState<string | null>(null)
@@ -227,13 +227,13 @@ const approveBusiness = async () => {
     try {
       const { error } = await supabase
         .from('businesses')
-        .update({ status: 'rejected' })
+        .update({ status: 'cancelled' })
         .eq('id', businessId)
 
       if (error) throw error
 
       setBusinesses(businesses.map(b =>
-        b.id === businessId ? { ...b, status: 'rejected' as const } : b
+        b.id === businessId ? { ...b, status: 'cancelled' as const } : b
       ))
 
       setShowDetailsModal(false)
@@ -252,11 +252,11 @@ const approveBusiness = async () => {
     try {
       console.log('🔄 Desativando empresa:', businessId)
 
-      // Primeiro, atualizar status da empresa para rejected
+      // Primeiro, atualizar status da empresa para suspended (suspenso)
       const { error: businessError, data: businessData } = await supabase
         .from('businesses')
         .update({
-          status: 'rejected',
+          status: 'suspended',
           updated_at: new Date().toISOString()
         })
         .eq('id', businessId)
@@ -285,7 +285,7 @@ const approveBusiness = async () => {
 
       // Atualizar estado local
       setBusinesses(businesses.map(b =>
-        b.id === businessId ? { ...b, status: 'rejected' as const } : b
+        b.id === businessId ? { ...b, status: 'suspended' as const } : b
       ))
 
       setShowActionsMenu(null)
@@ -376,7 +376,8 @@ const approveBusiness = async () => {
     total: businessesForStats.length,
     pending: businessesForStats.filter(b => b.status === 'pending').length,
     approved: businessesForStats.filter(b => b.status === 'approved').length,
-    rejected: businessesForStats.filter(b => b.status === 'rejected').length
+    suspended: businessesForStats.filter(b => b.status === 'suspended').length,
+    cancelled: businessesForStats.filter(b => b.status === 'cancelled').length
   }
 
   const filteredBusinesses = businesses.filter(b => {
@@ -423,10 +424,10 @@ const approveBusiness = async () => {
 
             <div className="bg-white rounded-lg shadow p-4 md:p-6">
               <div className="flex items-center justify-between mb-2">
-                <h3 className="text-xs md:text-sm font-medium text-gray-500">REJEITADAS</h3>
+                <h3 className="text-xs md:text-sm font-medium text-gray-500">INATIVAS</h3>
                 <XCircle className="w-4 h-4 md:w-5 md:h-5 text-red-600" />
               </div>
-              <p className="text-2xl md:text-3xl font-bold text-red-600">{stats.rejected}</p>
+              <p className="text-2xl md:text-3xl font-bold text-red-600">{stats.suspended + stats.cancelled}</p>
             </div>
           </div>
 
@@ -464,11 +465,18 @@ const approveBusiness = async () => {
                     {stats.approved}
                   </span>
                 </button>
-                <button onClick={() => setFilter('rejected')} className={`px-2 md:px-4 py-1.5 md:py-2 rounded-lg text-xs md:text-sm font-medium whitespace-nowrap flex items-center gap-1 ${filter === 'rejected' ? 'bg-red-600 text-white' : 'bg-gray-100 text-gray-700'}`}>
-                  <span className="hidden sm:inline">Rejeitadas</span>
+                <button onClick={() => setFilter('suspended')} className={`px-2 md:px-4 py-1.5 md:py-2 rounded-lg text-xs md:text-sm font-medium whitespace-nowrap flex items-center gap-1 ${filter === 'suspended' ? 'bg-orange-600 text-white' : 'bg-gray-100 text-gray-700'}`}>
+                  <span className="hidden sm:inline">Suspensas</span>
+                  <span className="sm:hidden flex items-center gap-1">
+                    <Ban size={14} />
+                    {stats.suspended}
+                  </span>
+                </button>
+                <button onClick={() => setFilter('cancelled')} className={`px-2 md:px-4 py-1.5 md:py-2 rounded-lg text-xs md:text-sm font-medium whitespace-nowrap flex items-center gap-1 ${filter === 'cancelled' ? 'bg-red-600 text-white' : 'bg-gray-100 text-gray-700'}`}>
+                  <span className="hidden sm:inline">Canceladas</span>
                   <span className="sm:hidden flex items-center gap-1">
                     <XCircle size={14} />
-                    {stats.rejected}
+                    {stats.cancelled}
                   </span>
                 </button>
               </div>
@@ -554,7 +562,8 @@ const approveBusiness = async () => {
                       <td className="px-6 py-4">
                         {business.status === 'pending' && <span className="px-2 py-1 bg-yellow-100 text-yellow-700 text-xs font-semibold rounded-full">Pendente</span>}
                         {business.status === 'approved' && <span className="px-2 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded-full">Aprovada</span>}
-                        {business.status === 'rejected' && <span className="px-2 py-1 bg-red-100 text-red-700 text-xs font-semibold rounded-full">Rejeitada</span>}
+                        {business.status === 'suspended' && <span className="px-2 py-1 bg-orange-100 text-orange-700 text-xs font-semibold rounded-full">Suspensa</span>}
+                        {business.status === 'cancelled' && <span className="px-2 py-1 bg-red-100 text-red-700 text-xs font-semibold rounded-full">Cancelada</span>}
                       </td>
                       <td className="px-6 py-4 text-right">
                         <div className="flex justify-end gap-2">
@@ -617,7 +626,8 @@ const approveBusiness = async () => {
                     <div className="flex items-center gap-2">
                       {business.status === 'pending' && <span className="px-2 py-1 bg-yellow-100 text-yellow-700 text-xs font-semibold rounded-full whitespace-nowrap">Pendente</span>}
                       {business.status === 'approved' && <span className="px-2 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded-full whitespace-nowrap">Aprovada</span>}
-                      {business.status === 'rejected' && <span className="px-2 py-1 bg-red-100 text-red-700 text-xs font-semibold rounded-full whitespace-nowrap">Rejeitada</span>}
+                      {business.status === 'suspended' && <span className="px-2 py-1 bg-orange-100 text-orange-700 text-xs font-semibold rounded-full whitespace-nowrap">Suspensa</span>}
+                      {business.status === 'cancelled' && <span className="px-2 py-1 bg-red-100 text-red-700 text-xs font-semibold rounded-full whitespace-nowrap">Cancelada</span>}
                       
                       <div className="actions-menu-container relative">
                         <button onClick={() => setShowActionsMenu(showActionsMenu === business.id ? null : business.id)} className="p-2 hover:bg-gray-100 rounded">
@@ -682,10 +692,13 @@ const approveBusiness = async () => {
               <span className={`px-2 md:px-3 py-1 rounded-full text-xs md:text-sm font-semibold whitespace-nowrap ${
                 selectedBusiness.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
                 selectedBusiness.status === 'approved' ? 'bg-green-100 text-green-700' :
+                selectedBusiness.status === 'suspended' ? 'bg-orange-100 text-orange-700' :
                 'bg-red-100 text-red-700'
               }`}>
                 {selectedBusiness.status === 'pending' ? 'Pendente' :
-                 selectedBusiness.status === 'approved' ? 'Aprovada' : 'Rejeitada'}
+                 selectedBusiness.status === 'approved' ? 'Aprovada' :
+                 selectedBusiness.status === 'suspended' ? 'Suspensa' :
+                 selectedBusiness.status === 'cancelled' ? 'Cancelada' : 'Pendente'}
               </span>
             </div>
 

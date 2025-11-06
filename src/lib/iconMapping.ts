@@ -1,7 +1,7 @@
 // src/lib/iconMapping.ts
 
-import { 
-  Utensils, Coffee, Pizza, 
+import {
+  Utensils, Coffee, Pizza,
   Sparkles, Scissors, Palette,
   PawPrint, Heart, Stethoscope,
   Shirt, ShoppingBag, Tag,
@@ -11,6 +11,9 @@ import {
   Package, Truck, Car,
   Store, Users, Briefcase,
   Book, GraduationCap, School,
+  Newspaper, Megaphone, Radio,
+  ShoppingCart, Warehouse,
+  Wrench as Tool, Hammer,
   type LucideIcon
 } from 'lucide-react'
 
@@ -102,6 +105,33 @@ export const slugToIconMap: Record<string, LucideIcon> = {
   'escritorio': Briefcase,
   'negocios': Briefcase,
   'consultoria': Users,
+
+  // Comunicação e Mídia
+  'comunicacao': Megaphone,
+  'jornal': Newspaper,
+  'jornalismo': Newspaper,
+  'midia': Radio,
+  'radio': Radio,
+  'noticia': Newspaper,
+  'noticias': Newspaper,
+  'imprensa': Newspaper,
+  'publicidade': Megaphone,
+  'marketing': Megaphone,
+
+  // Mercado e Varejo
+  'mercado': ShoppingCart,
+  'supermercado': ShoppingCart,
+  'mercearia': Store,
+  'atacado': Warehouse,
+  'distribuidora': Warehouse,
+
+  // Automotivo
+  'automotivo': Car,
+  'carro': Car,
+  'automovel': Car,
+  'mecanica': Tool,
+  'oficina': Hammer,
+  'garagem': Car,
 }
 
 // Função para pegar ícone baseado no slug

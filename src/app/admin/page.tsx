@@ -250,26 +250,9 @@ const approveBusiness = async () => {
     if (!confirmed) return
 
     try {
-      console.log('Desativando empresa:', businessId)
+      console.log('🔄 Desativando empresa:', businessId)
 
-      // Atualizar partners (pode não existir ainda se empresa só foi cadastrada)
-      const { error: partnerError, data: partnerData } = await supabase
-        .from('partners')
-        .update({ status: 'inactive' })
-        .eq('business_id', businessId)
-        .select()
-
-      if (partnerError) {
-        console.error('Erro ao desativar partner:', partnerError)
-        // Não bloqueia se partner não existir
-        if (partnerError.code !== 'PGRST116') { // PGRST116 = not found
-          throw partnerError
-        }
-      } else {
-        console.log('Partner desativado:', partnerData)
-      }
-
-      // Atualizar status da empresa
+      // Primeiro, atualizar status da empresa para rejected
       const { error: businessError, data: businessData } = await supabase
         .from('businesses')
         .update({
@@ -280,11 +263,25 @@ const approveBusiness = async () => {
         .select()
 
       if (businessError) {
-        console.error('Erro ao desativar business:', businessError)
+        console.error('❌ Erro ao desativar business:', businessError)
         throw new Error(`Erro ao desativar empresa: ${businessError.message}`)
       }
 
-      console.log('Empresa desativada:', businessData)
+      console.log('✅ Empresa desativada:', businessData)
+
+      // Depois, tentar desativar o partner (pode não existir ainda)
+      const { error: partnerError, data: partnerData, count } = await supabase
+        .from('partners')
+        .update({ is_active: false })
+        .eq('business_id', businessId)
+        .select()
+
+      if (partnerError) {
+        console.warn('⚠️ Aviso ao desativar partner:', partnerError)
+        // Não bloqueia o fluxo se partner não existir ou der erro
+      } else {
+        console.log('✅ Partner desativado:', partnerData)
+      }
 
       // Atualizar estado local
       setBusinesses(businesses.map(b =>
@@ -292,10 +289,11 @@ const approveBusiness = async () => {
       ))
 
       setShowActionsMenu(null)
-      alert('Empresa desativada com sucesso!')
+      setShowDetailsModal(false)
+      alert('✅ Empresa desativada com sucesso!')
     } catch (error: any) {
-      console.error('Erro completo ao desativar:', error)
-      alert(`Erro ao desativar empresa: ${error.message || 'Erro desconhecido'}`)
+      console.error('❌ Erro completo ao desativar:', error)
+      alert(`❌ Erro ao desativar empresa: ${error.message || 'Erro desconhecido'}`)
     }
   }
 

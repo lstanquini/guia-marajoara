@@ -3,6 +3,7 @@ import { createServerComponentClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
 import Image from 'next/image';
 import { Award, Clock, Globe, Instagram, MapPin, Phone, MessageSquare, Star } from 'lucide-react';
+import { BusinessMapAndReviews } from '@/components/BusinessMapAndReviews';
 
 interface Business {
   id: string;
@@ -30,6 +31,7 @@ interface Business {
   rating: number | null;
   total_reviews: number | null;
   plan_type: 'basic' | 'premium';
+  google_place_id: string | null;
 }
 
 interface Coupon {
@@ -153,12 +155,9 @@ export default async function EmpresaPage({ params }: { params: Promise<{ slug: 
   const data = await getBusinessData(slug);
   if (!data) notFound();
   const { business, coupons } = data;
-  
-  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+
   const fullAddress = `${business.address}${business.address_number ? `, ${business.address_number}` : ''}${business.neighborhood ? ` - ${business.neighborhood}` : ''}, ${business.city} - ${business.state}`;
-  const mapQuery = business.latitude && business.longitude ? `${business.latitude},${business.longitude}` : encodeURIComponent(fullAddress);
-  const mapSrc = `https://www.google.com/maps/embed/v1/place?key=${apiKey}&q=${mapQuery}`;
-  
+
   const dayNames: Record<string, string> = {
     'segunda': 'Segunda-feira',
     'terca': 'Terça-feira',
@@ -215,28 +214,14 @@ export default async function EmpresaPage({ params }: { params: Promise<{ slug: 
               </section>
             )}
             
-            {/* Mapa */}
-            <section className="bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-200">
-              <div className="p-8">
-                <h2 className="text-2xl font-bold text-slate-800 mb-4">Localização</h2>
-                <div className="flex items-start gap-2 text-slate-600">
-                  <MapPin className="w-5 h-5 mt-0.5 flex-shrink-0" />
-                  <p className="font-medium">{fullAddress}</p>
-                </div>
-              </div>
-              <div className="aspect-video w-full relative">
-                {apiKey ? (
-                  <iframe width="100%" height="100%" loading="lazy" allowFullScreen referrerPolicy="no-referrer-when-downgrade" src={mapSrc} className="border-0" />
-                ) : (
-                  <div className="bg-slate-100 w-full h-full flex items-center justify-center">
-                    <div className="text-center">
-                      <MapPin className="w-16 h-16 text-slate-300 mx-auto mb-3" />
-                      <p className="text-slate-600">Mapa em breve</p>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </section>
+            {/* Mapa e Avaliações do Google */}
+            <BusinessMapAndReviews
+              businessName={business.name}
+              address={fullAddress}
+              lat={business.latitude}
+              lng={business.longitude}
+              googlePlaceId={business.google_place_id}
+            />
           </div>
           
           {/* Sidebar */}

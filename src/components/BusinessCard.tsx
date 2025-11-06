@@ -134,7 +134,9 @@ export function BusinessCard({ business, variant = 'default' }: BusinessCardProp
           <Link href={`/empresas/${business.slug}`} className="block">
             <div className="flex items-start gap-3 mb-3">
               {/* Logo */}
-              <div className="w-14 h-14 rounded-lg bg-gradient-to-br from-pink-500 to-purple-500 flex items-center justify-center text-white font-bold text-xl flex-shrink-0 relative overflow-hidden">
+              <div className={`w-14 h-14 rounded-lg flex items-center justify-center text-white font-bold text-xl flex-shrink-0 relative overflow-hidden ${
+                logoUrl ? 'bg-white border border-gray-100' : 'bg-gradient-to-br from-pink-500 to-purple-500'
+              }`}>
                 {logoUrl ? (
                   <Image
                     src={logoUrl}

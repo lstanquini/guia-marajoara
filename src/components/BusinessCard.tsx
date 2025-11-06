@@ -108,7 +108,7 @@ export function BusinessCard({ business, variant = 'default' }: BusinessCardProp
                 src={bannerUrl}
                 alt={`Banner de ${business.name}`}
                 fill
-                className="object-cover"
+                className="object-contain md:object-cover"
               />
             )}
 

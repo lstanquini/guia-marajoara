@@ -99,7 +99,7 @@ function BusinessCard({ business }: { business: Business }) {
             src={bannerUrl}
             alt={`Banner de ${business.name}`}
             fill
-            className="object-cover"
+            className="object-contain md:object-cover"
           />
         )}
         

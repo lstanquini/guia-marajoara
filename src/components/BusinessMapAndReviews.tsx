@@ -1,6 +1,6 @@
 'use client'
 
-import { GoogleMapComponent } from './GoogleMap'
+import { GoogleMapSimple } from './GoogleMapSimple'
 import { GoogleReviews } from './GoogleReviews'
 import { useGooglePlace } from '@/hooks/useGooglePlace'
 import { MapPin } from 'lucide-react'
@@ -45,7 +45,7 @@ export function BusinessMapAndReviews({
 
         {/* Mapa responsivo */}
         <div className="w-full">
-          <GoogleMapComponent
+          <GoogleMapSimple
             address={address}
             businessName={businessName}
             lat={finalLat}

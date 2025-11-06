@@ -69,9 +69,23 @@ export function BusinessCard({ business, variant = 'default' }: BusinessCardProp
   // Pegar nome da categoria ou usar o slug capitalizado
   const categoryName = categoryInfo?.name || capitalizeCategory(business.category_main)
 
+  // Pegar banner (prioriza mobile, depois desktop)
+  const bannerUrl = business.banner_mobile_url || business.banner_url
+
   return (
     <>
       <Card variant={variant === 'featured' ? 'feature' : 'business'}>
+        {/* Banner no topo */}
+        {bannerUrl && (
+          <div className="w-full h-32 overflow-hidden rounded-t-2xl">
+            <img
+              src={bannerUrl}
+              alt={business.name}
+              className="w-full h-full object-cover"
+            />
+          </div>
+        )}
+
         <CardHeader>
           <div className="flex items-start justify-between mb-2">
             <div className="text-3xl">{business.logo_url || categoryEmoji}</div>
@@ -91,8 +105,8 @@ export function BusinessCard({ business, variant = 'default' }: BusinessCardProp
           </div>
           <CardTitle className="line-clamp-1">{business.name}</CardTitle>
           <CardDescription>
-            {business.category_sub 
-              ? capitalizeCategory(business.category_sub) 
+            {business.category_sub
+              ? capitalizeCategory(business.category_sub)
               : categoryName}
           </CardDescription>
         </CardHeader>
@@ -104,22 +118,23 @@ export function BusinessCard({ business, variant = 'default' }: BusinessCardProp
             </p>
           )}
 
-          {business.rating && (
-            <div className="flex items-center gap-1 mb-2">
-              <div className="flex items-center text-yellow-400">
-                {[...Array(5)].map((_, i) => (
-                  <Star
-                    key={i}
-                    size={14}
-                    fill={i < Math.floor(business.rating!) ? 'currentColor' : 'none'}
-                  />
-                ))}
-              </div>
-              <span className="text-xs text-[#6B7280]">
-                {business.rating} ({business.total_reviews || 0})
-              </span>
+          {/* Sempre mostrar avaliações, mesmo quando 0 */}
+          <div className="flex items-center gap-1 mb-2">
+            <div className="flex items-center">
+              {[...Array(5)].map((_, i) => (
+                <Star
+                  key={i}
+                  size={14}
+                  fill={business.rating && i < Math.floor(business.rating) ? '#FBBF24' : 'none'}
+                  className={business.rating && i < Math.floor(business.rating) ? 'text-yellow-400' : 'text-gray-300'}
+                  strokeWidth={1.5}
+                />
+              ))}
             </div>
-          )}
+            <span className="text-xs text-[#6B7280]">
+              {business.rating ? `${business.rating} (${business.total_reviews || 0})` : '0 avaliações'}
+            </span>
+          </div>
 
           {business.address && (
             <div className="flex items-start gap-1 text-xs text-[#6B7280]">

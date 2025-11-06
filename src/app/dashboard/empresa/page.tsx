@@ -12,6 +12,7 @@ import { Phone, Globe, Instagram, MapPin, Mail, Star, Search } from 'lucide-reac
 interface Category {
   id: string
   name: string
+  slug: string
 }
 
 interface GooglePlaceResult {
@@ -49,7 +50,8 @@ export default function EditarEmpresaPage() {
 
   const [formData, setFormData] = useState({
     name: '',
-    category_sub: '',
+    category_main: '',      // slug da categoria (para filtros)
+    category_sub: '',       // nome da categoria (para display)
     description: '',
     email_business: '',
     phone: '',
@@ -81,15 +83,15 @@ export default function EditarEmpresaPage() {
     async function loadCategories() {
       const { data } = await supabase
         .from('categories')
-        .select('id, name')
+        .select('id, name, slug')
         .order('name')
-      
+
       if (data) {
         setCategories(data)
       }
       setLoadingCategories(false)
     }
-    
+
     loadCategories()
   }, [supabase])
 
@@ -143,6 +145,7 @@ export default function EditarEmpresaPage() {
         setBusinessId(data.id)
         setFormData({
           name: data.name || '',
+          category_main: data.category_main || '',
           category_sub: data.category_sub || '',
           description: data.description || '',
           email_business: data.email_business || '',
@@ -386,7 +389,8 @@ export default function EditarEmpresaPage() {
         .from('businesses')
         .update({
           name: formData.name,
-          category_sub: formData.category_sub || null,
+          category_main: formData.category_main || null,  // slug da categoria
+          category_sub: formData.category_sub || null,    // nome da categoria
           description: formData.description || null,
           email_business: formData.email_business || null,
           phone: formData.phone || null,
@@ -469,15 +473,22 @@ export default function EditarEmpresaPage() {
 
               <div>
                 <label className="block text-sm font-medium mb-1">Categoria *</label>
-                <select 
-                  value={formData.category_sub} 
-                  onChange={(e) => setFormData(prev => ({ ...prev, category_sub: e.target.value }))} 
+                <select
+                  value={formData.category_main}
+                  onChange={(e) => {
+                    const selectedCategory = categories.find(c => c.slug === e.target.value)
+                    setFormData(prev => ({
+                      ...prev,
+                      category_main: selectedCategory?.slug || '',
+                      category_sub: selectedCategory?.name || ''
+                    }))
+                  }}
                   className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-[#C2227A]"
                   required
                 >
                   <option value="">Selecione uma categoria</option>
                   {categories.map(cat => (
-                    <option key={cat.id} value={cat.name}>{cat.name}</option>
+                    <option key={cat.id} value={cat.slug}>{cat.name}</option>
                   ))}
                 </select>
               </div>
@@ -828,15 +839,22 @@ export default function EditarEmpresaPage() {
 
                 <div>
                   <label className="block text-sm font-medium mb-1">Categoria *</label>
-                  <select 
-                    value={formData.category_sub} 
-                    onChange={(e) => setFormData(prev => ({ ...prev, category_sub: e.target.value }))} 
+                  <select
+                    value={formData.category_main}
+                    onChange={(e) => {
+                      const selectedCategory = categories.find(c => c.slug === e.target.value)
+                      setFormData(prev => ({
+                        ...prev,
+                        category_main: selectedCategory?.slug || '',
+                        category_sub: selectedCategory?.name || ''
+                      }))
+                    }}
                     className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#C2227A]"
                     required
                   >
                     <option value="">Selecione uma categoria</option>
                     {categories.map(cat => (
-                      <option key={cat.id} value={cat.name}>{cat.name}</option>
+                      <option key={cat.id} value={cat.slug}>{cat.name}</option>
                     ))}
                   </select>
                   <p className="text-xs text-gray-500 mt-1">Escolha a categoria que melhor representa seu negócio</p>

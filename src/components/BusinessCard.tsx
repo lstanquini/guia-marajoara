@@ -98,34 +98,49 @@ export function BusinessCard({ business, variant = 'default' }: BusinessCardProp
   return (
     <>
       <div className="group bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100 h-full flex flex-col">
-        {/* Banner - igual ao da home */}
-        <Link href={`/empresas/${business.slug}`} className="block">
-          <div className={`relative h-48 flex-shrink-0 ${
+        {/* Banner com proporção correta: Mobile 9:16 (1080x1920), Desktop 16:5 (1920x600) */}
+        <Link href={`/empresas/${business.slug}`} className="block relative">
+          {/* Banner Mobile - 9:16 aspect ratio */}
+          <div className={`relative w-full md:hidden ${
             !bannerUrl ? generateGradient(business.slug) : 'bg-gray-200'
-          }`}>
+          }`} style={{ aspectRatio: '9 / 16' }}>
             {bannerUrl && (
               <Image
                 src={bannerUrl}
                 alt={`Banner de ${business.name}`}
                 fill
-                className="object-contain"
+                className="object-cover"
               />
             )}
+          </div>
 
-            {/* Badges no canto superior direito */}
-            <div className="absolute top-3 right-3 flex flex-col gap-2">
-              {business.plan_type === 'premium' && (
-                <span className="bg-gradient-to-r from-[#C2227A] to-[#A01860] text-white text-xs font-semibold px-3 py-1.5 rounded-full shadow-md">
-                  Premium
-                </span>
-              )}
-              {business.has_active_coupons && (
-                <span className="bg-green-500 text-white text-xs font-semibold px-3 py-1.5 rounded-full shadow-md flex items-center gap-1">
-                  <Tag size={12} />
-                  Cupom
-                </span>
-              )}
-            </div>
+          {/* Banner Desktop - 16:5 aspect ratio */}
+          <div className={`relative w-full hidden md:block ${
+            !bannerUrl ? generateGradient(business.slug) : 'bg-gray-200'
+          }`} style={{ aspectRatio: '16 / 5' }}>
+            {bannerUrl && (
+              <Image
+                src={bannerUrl}
+                alt={`Banner de ${business.name}`}
+                fill
+                className="object-cover"
+              />
+            )}
+          </div>
+
+          {/* Badges no canto superior direito */}
+          <div className="absolute top-3 right-3 flex flex-col gap-2 z-10">
+            {business.plan_type === 'premium' && (
+              <span className="bg-gradient-to-r from-[#C2227A] to-[#A01860] text-white text-xs font-semibold px-3 py-1.5 rounded-full shadow-md">
+                Premium
+              </span>
+            )}
+            {business.has_active_coupons && (
+              <span className="bg-green-500 text-white text-xs font-semibold px-3 py-1.5 rounded-full shadow-md flex items-center gap-1">
+                <Tag size={12} />
+                Cupom
+              </span>
+            )}
           </div>
         </Link>
 

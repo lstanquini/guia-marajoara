@@ -7,11 +7,19 @@ import { useAuth } from '@/contexts/auth-context'
 import { usePartner } from '@/hooks/usePartner'
 import { useToast } from '@/contexts/toast-context'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
-import { Phone, Globe, Instagram, MapPin, Mail } from 'lucide-react'
+import { Phone, Globe, Instagram, MapPin, Mail, Star, Search } from 'lucide-react'
 
 interface Category {
   id: string
   name: string
+}
+
+interface GooglePlaceResult {
+  place_id: string
+  name: string
+  formatted_address: string
+  rating?: number
+  user_ratings_total?: number
 }
 
 const STORAGE_KEY_PREFIX = 'editar-empresa-draft-'
@@ -29,6 +37,15 @@ export default function EditarEmpresaPage() {
   const [loadingCep, setLoadingCep] = useState(false)
   const hasLoadedFromDB = useRef(false)
   const storageKey = useRef<string>('')
+
+  // Estados para Google Places
+  const [googlePlaceId, setGooglePlaceId] = useState<string | null>(null)
+  const [googlePlaceData, setGooglePlaceData] = useState<GooglePlaceResult | null>(null)
+  const [googleSearchQuery, setGoogleSearchQuery] = useState('')
+  const [googleSearchResults, setGoogleSearchResults] = useState<GooglePlaceResult[]>([])
+  const [loadingGoogleSearch, setLoadingGoogleSearch] = useState(false)
+  const [syncingRatings, setSyncingRatings] = useState(false)
+  const [notOnGoogle, setNotOnGoogle] = useState(false)
 
   const [formData, setFormData] = useState({
     name: '',
@@ -141,6 +158,30 @@ export default function EditarEmpresaPage() {
           zip_code: data.zip_code || '',
           delivery: data.delivery || false
         })
+
+        // Carregar google_place_id
+        if (data.google_place_id) {
+          setGooglePlaceId(data.google_place_id)
+          // Buscar dados do Google Place
+          try {
+            const response = await fetch(`/api/google-places?placeId=${data.google_place_id}`)
+            if (response.ok) {
+              const placeData = await response.json()
+              setGooglePlaceData({
+                place_id: data.google_place_id,
+                name: placeData.name,
+                formatted_address: placeData.formatted_address,
+                rating: placeData.rating,
+                user_ratings_total: placeData.user_ratings_total
+              })
+            }
+          } catch (err) {
+            console.error('Erro ao carregar dados do Google:', err)
+          }
+        } else if (data.google_place_id === 'not_on_google') {
+          setNotOnGoogle(true)
+        }
+
         hasLoadedFromDB.current = true
       }
     }
@@ -148,6 +189,146 @@ export default function EditarEmpresaPage() {
     loadBusiness()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, isPartner, partner, authLoading, partnerLoading, router])
+
+  // Função para buscar no Google Places
+  const handleGoogleSearch = async () => {
+    if (!googleSearchQuery.trim()) {
+      toast.error('Digite o nome da sua empresa para buscar')
+      return
+    }
+
+    setLoadingGoogleSearch(true)
+    setGoogleSearchResults([])
+
+    try {
+      const query = `${googleSearchQuery}, ${formData.neighborhood || formData.city}`
+      const response = await fetch(`/api/google-places?query=${encodeURIComponent(query)}`)
+
+      if (!response.ok) {
+        throw new Error('Erro ao buscar no Google')
+      }
+
+      const data = await response.json()
+
+      if (data.place_id) {
+        // Retornou um único resultado
+        setGoogleSearchResults([{
+          place_id: data.place_id,
+          name: data.name,
+          formatted_address: data.formatted_address,
+          rating: data.rating,
+          user_ratings_total: data.user_ratings_total
+        }])
+      } else if (Array.isArray(data)) {
+        setGoogleSearchResults(data)
+      } else {
+        toast.error('Nenhum resultado encontrado')
+      }
+    } catch (error) {
+      console.error('Erro ao buscar:', error)
+      toast.error('Erro ao buscar no Google Places')
+    } finally {
+      setLoadingGoogleSearch(false)
+    }
+  }
+
+  // Função para vincular ao Google Place
+  const handleLinkGooglePlace = async (placeId: string, placeData: GooglePlaceResult) => {
+    if (!businessId) return
+
+    try {
+      setLoading(true)
+
+      // Salvar google_place_id no banco
+      const { error } = await supabase
+        .from('businesses')
+        .update({ google_place_id: placeId })
+        .eq('id', businessId)
+
+      if (error) throw error
+
+      setGooglePlaceId(placeId)
+      setGooglePlaceData(placeData)
+      setGoogleSearchResults([])
+      setGoogleSearchQuery('')
+
+      toast.success('Empresa vinculada ao Google com sucesso!')
+
+      // Sincronizar avaliações automaticamente
+      await handleSyncRatings(placeId)
+    } catch (error) {
+      console.error('Erro ao vincular:', error)
+      toast.error('Erro ao vincular ao Google')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Função para sincronizar avaliações
+  const handleSyncRatings = async (placeId?: string) => {
+    const idToSync = placeId || googlePlaceId
+    if (!idToSync || !businessId) return
+
+    setSyncingRatings(true)
+
+    try {
+      const response = await fetch(`/api/google-places?placeId=${idToSync}`)
+      if (!response.ok) throw new Error('Erro ao buscar avaliações')
+
+      const data = await response.json()
+
+      const { error } = await supabase
+        .from('businesses')
+        .update({
+          rating: data.rating || null,
+          total_reviews: data.user_ratings_total || null
+        })
+        .eq('id', businessId)
+
+      if (error) throw error
+
+      // Atualizar dados locais
+      if (googlePlaceData) {
+        setGooglePlaceData({
+          ...googlePlaceData,
+          rating: data.rating,
+          user_ratings_total: data.user_ratings_total
+        })
+      }
+
+      toast.success('Avaliações sincronizadas com sucesso!')
+    } catch (error) {
+      console.error('Erro ao sincronizar:', error)
+      toast.error('Erro ao sincronizar avaliações')
+    } finally {
+      setSyncingRatings(false)
+    }
+  }
+
+  // Função para marcar como "Não está no Google"
+  const handleNotOnGoogle = async () => {
+    if (!businessId) return
+
+    try {
+      setLoading(true)
+
+      const { error } = await supabase
+        .from('businesses')
+        .update({ google_place_id: 'not_on_google' })
+        .eq('id', businessId)
+
+      if (error) throw error
+
+      setNotOnGoogle(true)
+      setGoogleSearchResults([])
+      toast.success('Marcado como "Não está no Google"')
+    } catch (error) {
+      console.error('Erro:', error)
+      toast.error('Erro ao salvar')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const handleCepChange = async (cep: string) => {
     const cleanCep = cep.replace(/\D/g, '')
@@ -374,12 +555,12 @@ export default function EditarEmpresaPage() {
                 <label className="block text-sm font-medium mb-1 flex items-center gap-1">
                   <Instagram className="w-4 h-4" />Instagram
                 </label>
-                <input 
-                  type="text" 
-                  value={formData.instagram} 
-                  onChange={(e) => setFormData(prev => ({ ...prev, instagram: e.target.value }))} 
-                  placeholder="@suaempresa" 
-                  className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-[#C2227A]" 
+                <input
+                  type="text"
+                  value={formData.instagram}
+                  onChange={(e) => setFormData(prev => ({ ...prev, instagram: e.target.value }))}
+                  placeholder="@suaempresa"
+                  className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-[#C2227A]"
                 />
               </div>
 
@@ -387,15 +568,131 @@ export default function EditarEmpresaPage() {
                 <label className="block text-sm font-medium mb-1 flex items-center gap-1">
                   <Globe className="w-4 h-4" />Website
                 </label>
-                <input 
-                  type="url" 
-                  value={formData.website} 
-                  onChange={(e) => setFormData(prev => ({ ...prev, website: e.target.value }))} 
-                  placeholder="https://seusite.com" 
-                  className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-[#C2227A]" 
+                <input
+                  type="url"
+                  value={formData.website}
+                  onChange={(e) => setFormData(prev => ({ ...prev, website: e.target.value }))}
+                  placeholder="https://seusite.com"
+                  className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-[#C2227A]"
                 />
               </div>
             </div>
+          </div>
+
+          {/* Avaliações Google */}
+          <div className="bg-white rounded-lg shadow p-4">
+            <h2 className="text-base font-bold mb-3 flex items-center gap-2">
+              <Star className="w-4 h-4 text-yellow-500" />Avaliações Google
+            </h2>
+
+            {googlePlaceId && googlePlaceId !== 'not_on_google' ? (
+              // Já vinculado - mostrar informações
+              <div className="space-y-3">
+                <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                  <p className="text-sm font-semibold text-green-800 mb-1">✓ Vinculado ao Google</p>
+                  {googlePlaceData && (
+                    <>
+                      <p className="text-xs text-gray-600 mb-2">{googlePlaceData.name}</p>
+                      {googlePlaceData.rating && (
+                        <div className="flex items-center gap-1">
+                          <Star size={14} fill="#FBBF24" className="text-yellow-400" />
+                          <span className="text-sm font-bold">{googlePlaceData.rating.toFixed(1)}</span>
+                          <span className="text-xs text-gray-500">
+                            ({googlePlaceData.user_ratings_total || 0} avaliações)
+                          </span>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => handleSyncRatings()}
+                  disabled={syncingRatings}
+                  className="w-full px-4 py-2 bg-blue-500 text-white rounded-lg text-sm font-medium disabled:opacity-50"
+                >
+                  {syncingRatings ? 'Sincronizando...' : 'Sincronizar Avaliações'}
+                </button>
+
+                <p className="text-xs text-gray-500 text-center">
+                  Uma vez vinculado, o score sempre ficará visível. Apenas administradores podem alterar o vínculo.
+                </p>
+              </div>
+            ) : notOnGoogle ? (
+              // Marcado como "não está no Google"
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+                <p className="text-sm text-gray-600">Empresa não está no Google</p>
+              </div>
+            ) : (
+              // Não vinculado - mostrar busca
+              <div className="space-y-3">
+                <p className="text-xs text-gray-600">
+                  Vincule sua empresa ao Google para exibir avaliações e aumentar a credibilidade.
+                </p>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">Buscar no Google</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={googleSearchQuery}
+                      onChange={(e) => setGoogleSearchQuery(e.target.value)}
+                      placeholder="Nome da empresa"
+                      className="flex-1 px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-[#C2227A]"
+                      onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleGoogleSearch())}
+                    />
+                    <button
+                      type="button"
+                      onClick={handleGoogleSearch}
+                      disabled={loadingGoogleSearch}
+                      className="px-4 py-2 bg-[#C2227A] text-white rounded-lg text-sm disabled:opacity-50"
+                    >
+                      <Search className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+
+                {loadingGoogleSearch && (
+                  <p className="text-xs text-blue-600">Buscando...</p>
+                )}
+
+                {googleSearchResults.length > 0 && (
+                  <div className="space-y-2">
+                    {googleSearchResults.map((result) => (
+                      <div key={result.place_id} className="border rounded-lg p-3">
+                        <p className="text-sm font-semibold">{result.name}</p>
+                        <p className="text-xs text-gray-600 mb-2">{result.formatted_address}</p>
+                        {result.rating && (
+                          <div className="flex items-center gap-1 mb-2">
+                            <Star size={12} fill="#FBBF24" className="text-yellow-400" />
+                            <span className="text-xs font-bold">{result.rating.toFixed(1)}</span>
+                            <span className="text-xs text-gray-500">
+                              ({result.user_ratings_total || 0})
+                            </span>
+                          </div>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => handleLinkGooglePlace(result.place_id, result)}
+                          className="w-full px-3 py-1.5 bg-green-500 text-white rounded text-xs font-medium"
+                        >
+                          Vincular
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <button
+                  type="button"
+                  onClick={handleNotOnGoogle}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs text-gray-600"
+                >
+                  Minha empresa não está no Google
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Endereço */}
@@ -623,12 +920,12 @@ export default function EditarEmpresaPage() {
                   <label className="block text-sm font-medium mb-1 flex items-center gap-2">
                     <Instagram className="w-4 h-4" />Instagram
                   </label>
-                  <input 
-                    type="text" 
-                    value={formData.instagram} 
-                    onChange={(e) => setFormData(prev => ({ ...prev, instagram: e.target.value }))} 
-                    placeholder="@suaempresa" 
-                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#C2227A]" 
+                  <input
+                    type="text"
+                    value={formData.instagram}
+                    onChange={(e) => setFormData(prev => ({ ...prev, instagram: e.target.value }))}
+                    placeholder="@suaempresa"
+                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#C2227A]"
                   />
                 </div>
 
@@ -636,15 +933,135 @@ export default function EditarEmpresaPage() {
                   <label className="block text-sm font-medium mb-1 flex items-center gap-2">
                     <Globe className="w-4 h-4" />Website
                   </label>
-                  <input 
-                    type="url" 
-                    value={formData.website} 
-                    onChange={(e) => setFormData(prev => ({ ...prev, website: e.target.value }))} 
-                    placeholder="https://seusite.com" 
-                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#C2227A]" 
+                  <input
+                    type="url"
+                    value={formData.website}
+                    onChange={(e) => setFormData(prev => ({ ...prev, website: e.target.value }))}
+                    placeholder="https://seusite.com"
+                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#C2227A]"
                   />
                 </div>
               </div>
+            </div>
+
+            {/* Avaliações Google */}
+            <div className="bg-white rounded-lg shadow p-6">
+              <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
+                <Star className="w-5 h-5 text-yellow-500" />Avaliações Google
+              </h2>
+
+              {googlePlaceId && googlePlaceId !== 'not_on_google' ? (
+                // Já vinculado - mostrar informações
+                <div className="space-y-4">
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                    <p className="text-sm font-semibold text-green-800 mb-2">✓ Empresa vinculada ao Google</p>
+                    {googlePlaceData && (
+                      <>
+                        <p className="text-sm text-gray-700 mb-3">{googlePlaceData.name}</p>
+                        {googlePlaceData.rating && (
+                          <div className="flex items-center gap-2">
+                            <Star size={18} fill="#FBBF24" className="text-yellow-400" />
+                            <span className="text-lg font-bold">{googlePlaceData.rating.toFixed(1)}</span>
+                            <span className="text-sm text-gray-600">
+                              ({googlePlaceData.user_ratings_total || 0} avaliações)
+                            </span>
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => handleSyncRatings()}
+                    disabled={syncingRatings}
+                    className="px-6 py-2 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 disabled:opacity-50"
+                  >
+                    {syncingRatings ? 'Sincronizando...' : 'Sincronizar Avaliações'}
+                  </button>
+
+                  <p className="text-sm text-gray-500">
+                    Uma vez vinculado, o score sempre ficará visível nos cards da sua empresa. Apenas administradores podem alterar o vínculo.
+                  </p>
+                </div>
+              ) : notOnGoogle ? (
+                // Marcado como "não está no Google"
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                  <p className="text-sm text-gray-600">Sua empresa não está no Google</p>
+                </div>
+              ) : (
+                // Não vinculado - mostrar busca
+                <div className="space-y-4">
+                  <p className="text-sm text-gray-600">
+                    Vincule sua empresa ao Google para exibir avaliações e aumentar a credibilidade com seus clientes.
+                  </p>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Buscar no Google Places</label>
+                    <div className="flex gap-3">
+                      <input
+                        type="text"
+                        value={googleSearchQuery}
+                        onChange={(e) => setGoogleSearchQuery(e.target.value)}
+                        placeholder="Digite o nome da sua empresa"
+                        className="flex-1 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#C2227A]"
+                        onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleGoogleSearch())}
+                      />
+                      <button
+                        type="button"
+                        onClick={handleGoogleSearch}
+                        disabled={loadingGoogleSearch}
+                        className="px-6 py-2 bg-[#C2227A] text-white rounded-lg font-medium hover:bg-[#A01860] disabled:opacity-50 flex items-center gap-2"
+                      >
+                        <Search className="w-5 h-5" />
+                        Buscar
+                      </button>
+                    </div>
+                  </div>
+
+                  {loadingGoogleSearch && (
+                    <p className="text-sm text-blue-600">Buscando no Google...</p>
+                  )}
+
+                  {googleSearchResults.length > 0 && (
+                    <div className="space-y-3">
+                      <p className="text-sm font-medium">Resultados encontrados:</p>
+                      {googleSearchResults.map((result) => (
+                        <div key={result.place_id} className="border rounded-lg p-4 hover:border-[#C2227A] transition-colors">
+                          <p className="font-semibold mb-1">{result.name}</p>
+                          <p className="text-sm text-gray-600 mb-3">{result.formatted_address}</p>
+                          {result.rating && (
+                            <div className="flex items-center gap-2 mb-3">
+                              <Star size={16} fill="#FBBF24" className="text-yellow-400" />
+                              <span className="text-sm font-bold">{result.rating.toFixed(1)}</span>
+                              <span className="text-sm text-gray-500">
+                                ({result.user_ratings_total || 0} avaliações)
+                              </span>
+                            </div>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => handleLinkGooglePlace(result.place_id, result)}
+                            className="px-4 py-2 bg-green-500 text-white rounded-lg font-medium hover:bg-green-600"
+                          >
+                            Vincular esta empresa
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="border-t pt-4">
+                    <button
+                      type="button"
+                      onClick={handleNotOnGoogle}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50"
+                    >
+                      Minha empresa não está no Google
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Endereço */}

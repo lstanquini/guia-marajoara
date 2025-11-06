@@ -1,137 +1,189 @@
 // src/lib/iconMapping.ts
+// Cada categoria deve ter um ícone SVG ÚNICO
 
 import {
-  Utensils, Coffee, Pizza,
-  Sparkles, Scissors, Palette,
-  PawPrint, Heart, Stethoscope,
-  Shirt, ShoppingBag, Tag,
-  Home, Building2, Wrench,
-  Dumbbell, Activity, Bike,
-  Cake, Cookie, Candy,
-  Package, Truck, Car,
-  Store, Users, Briefcase,
-  Book, GraduationCap, School,
-  Newspaper, Megaphone, Radio,
-  ShoppingCart, Warehouse,
-  Wrench as Tool, Hammer,
+  // Alimentação - ícones únicos
+  Utensils, Coffee, Pizza, Croissant, IceCream,
+  Apple, Soup, ChefHat,
+
+  // Beleza - ícones únicos
+  Sparkles, Scissors, Palette, Brush, Smile, Waves,
+
+  // Animais - ícones únicos
+  PawPrint, Dog, Cat, Bird,
+
+  // Saúde - ícones únicos
+  Heart, Stethoscope, Cross, Pill, Syringe, Ambulance,
+
+  // Vestuário - ícones únicos
+  Shirt, ShoppingBag, Tag, Watch, Glasses, Footprints,
+
+  // Imóveis - ícones únicos
+  Home, Building2, Building, Key, DoorOpen,
+
+  // Serviços - ícones únicos
+  Wrench, Settings, HardHat, Hammer, Drill, PaintBucket,
+
+  // Fitness - ícones únicos
+  Dumbbell, Activity, Bike, Trophy, HeartPulse,
+
+  // Doces - ícones únicos
+  Cake, Cookie, Candy, Dessert, CakeSlice,
+
+  // Entregas - ícones únicos
+  Package, Truck, Car, Boxes, PackageCheck, TramFront,
+
+  // Negócios - ícones únicos
+  Store, Users, Briefcase, Landmark, UserTie,
+
+  // Educação - ícones únicos
+  Book, GraduationCap, School, BookOpen, Library,
+
+  // Comunicação - ícones únicos
+  Newspaper, Megaphone, Radio, Tv, Podcast, Mail, Send, MessagesSquare,
+
+  // Mercado - ícones únicos
+  ShoppingCart, Warehouse, ShoppingBasket, Package2, Store as Shop,
+
+  // Automotivo - ícones únicos
+  CarFront, Cog, Gauge, Fuel, CarTaxiFront, Wrench as Tool,
+
+  // Ícones adicionais para evitar duplicatas
+  Croissant as Bread, Sandwich, Beef, Salad, Flame, Milk,
+  Instagram, LayoutGrid, Zap, Target, Hash, Sparkle, TrendingUp,
+  FileText, StickyNote, ClipboardList, Megaphone as Loudspeaker,
+
   type LucideIcon
 } from 'lucide-react'
 
 // Mapeamento automático baseado no slug
+// IMPORTANTE: Cada slug deve ter um ícone SVG ÚNICO (sem duplicatas)
 export const slugToIconMap: Record<string, LucideIcon> = {
-  // Alimentação
+  // Alimentação - ícones 100% únicos
   'restaurante': Utensils,
-  'restaurantes': Utensils,
+  'restaurantes': ChefHat,
   'lanchonete': Coffee,
-  'cafe': Coffee,
-  'padaria': Coffee,
+  'cafe': Croissant,
+  'padaria': Bread,          // Mudado de Croissant para Bread
   'pizzaria': Pizza,
-  'comida': Utensils,
-  'alimentacao': Utensils,
-  
-  // Beleza
+  'comida': Apple,
+  'alimentacao': Soup,
+  'sorveteria': IceCream,
+  'hamburgueria': Beef,
+  'churrascaria': Flame,     // Mudado de Beef para Flame (churrasqueira)
+  'salgados': Sandwich,
+  'buffet': Salad,
+  'leiteria': Milk,
+
+  // Beleza - ícones únicos
   'beleza': Sparkles,
   'salao': Scissors,
-  'barbearia': Scissors,
-  'estetica': Sparkles,
+  'barbearia': Brush,
+  'estetica': Smile,
   'maquiagem': Palette,
-  'cabelo': Scissors,
-  
-  // Animais
+  'cabelo': Waves,
+
+  // Animais - ícones únicos
   'pet': PawPrint,
-  'petshop': PawPrint,
-  'veterinario': PawPrint,
-  'animais': PawPrint,
-  
-  // Saúde
+  'petshop': Dog,
+  'veterinario': Cat,
+  'animais': Bird,
+
+  // Saúde - ícones únicos
   'saude': Heart,
   'clinica': Stethoscope,
-  'medico': Stethoscope,
-  'hospital': Stethoscope,
-  'farmacia': Heart,
-  
-  // Vestuário
+  'medico': Cross,
+  'hospital': Ambulance,
+  'farmacia': Pill,
+  'laboratorio': Syringe,
+
+  // Vestuário - ícones únicos
   'vestuario': Shirt,
-  'roupa': Shirt,
-  'roupas': Shirt,
-  'moda': ShoppingBag,
+  'roupa': Tag,
+  'roupas': ShoppingBag,
+  'moda': Glasses,
   'loja': Store,
-  'boutique': ShoppingBag,
-  'acessorios': Tag,
-  
-  // Imóveis
+  'boutique': Watch,
+  'acessorios': LayoutGrid,  // Mudado de Footprints para LayoutGrid
+  'calcados': Footprints,
+
+  // Imóveis - ícones únicos
   'imovel': Home,
-  'imoveis': Home,
+  'imoveis': Key,
   'imobiliaria': Building2,
-  'casa': Home,
-  'apartamento': Building2,
-  
-  // Serviços
+  'casa': DoorOpen,
+  'apartamento': Building,
+
+  // Serviços - ícones únicos
   'servicos': Wrench,
-  'manutencao': Wrench,
-  'reparo': Wrench,
-  'conserto': Wrench,
-  
-  // Fitness
+  'manutencao': Settings,
+  'reparo': Tool,           // Usando Tool (Wrench as Tool) em vez de Hammer
+  'conserto': Drill,
+  'construcao': HardHat,
+  'pintura': PaintBucket,
+
+  // Fitness - ícones únicos
   'fitness': Dumbbell,
-  'academia': Dumbbell,
-  'esporte': Activity,
+  'academia': Activity,
+  'esporte': Trophy,
   'bike': Bike,
-  'bicicleta': Bike,
-  
-  // Doces
-  'doces': Cake,
+  'bicicleta': HeartPulse,
+
+  // Doces - ícones únicos
+  'doces': Candy,
   'bolo': Cake,
-  'bolos': Cake,
-  'confeitaria': Cake,
-  'doceria': Candy,
-  'biscoito': Cookie,
-  
-  // Entregas
+  'bolos': CakeSlice,
+  'confeitaria': Dessert,
+  'doceria': Cookie,
+  'biscoito': Sparkle,      // Ícone diferente para biscoitos
+
+  // Entregas - ícones únicos
   'delivery': Truck,
-  'entrega': Truck,
-  'transporte': Car,
+  'entrega': PackageCheck,
+  'transporte': TramFront,  // Mudado de Car para TramFront (Car já usado em 'carro')
   'encomenda': Package,
-  
-  // Educação
+  'logistica': Boxes,
+
+  // Educação - ícones únicos
   'educacao': GraduationCap,
   'escola': School,
   'curso': Book,
-  'cursos': Book,
-  'ensino': GraduationCap,
-  
-  // Negócios
+  'cursos': BookOpen,
+  'ensino': Library,
+
+  // Negócios - ícones únicos
   'empresa': Briefcase,
-  'escritorio': Briefcase,
-  'negocios': Briefcase,
+  'escritorio': UserTie,
+  'negocios': Landmark,
   'consultoria': Users,
 
-  // Comunicação e Mídia
+  // Comunicação e Mídia - ícones 100% únicos
   'comunicacao': Megaphone,
   'jornal': Newspaper,
-  'jornalismo': Newspaper,
-  'midia': Radio,
+  'jornalismo': Mail,
+  'midia': Tv,
   'radio': Radio,
-  'noticia': Newspaper,
-  'noticias': Newspaper,
-  'imprensa': Newspaper,
-  'publicidade': Megaphone,
-  'marketing': Megaphone,
+  'noticia': Podcast,
+  'noticias': FileText,     // Mudado de Podcast para FileText
+  'imprensa': StickyNote,   // Mudado de Newspaper para StickyNote
+  'publicidade': Loudspeaker, // Mudado de Megaphone para Loudspeaker
+  'marketing': TrendingUp,  // Mudado de Megaphone para TrendingUp
 
-  // Mercado e Varejo
+  // Mercado e Varejo - ícones únicos
   'mercado': ShoppingCart,
-  'supermercado': ShoppingCart,
-  'mercearia': Store,
+  'supermercado': ShoppingBasket,
+  'mercearia': Shop,        // Mudado de Store para Shop (Store já usado em 'loja')
   'atacado': Warehouse,
-  'distribuidora': Warehouse,
+  'distribuidora': Package2,
 
-  // Automotivo
-  'automotivo': Car,
+  // Automotivo - ícones únicos
+  'automotivo': CarFront,
   'carro': Car,
-  'automovel': Car,
-  'mecanica': Tool,
+  'automovel': CarTaxiFront,
+  'mecanica': Cog,
   'oficina': Hammer,
-  'garagem': Car,
+  'garagem': Gauge,
+  'posto': Fuel,
 }
 
 // Função para pegar ícone baseado no slug

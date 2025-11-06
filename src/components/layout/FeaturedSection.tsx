@@ -94,7 +94,7 @@ function HeroCardMobile({ featured }: { featured: FeaturedBusiness }) {
             src={bannerUrl}
             alt={displayTitle}
             fill
-            className="object-cover"
+            className="object-contain"
             priority
           />
         ) : (
@@ -214,11 +214,11 @@ function HeroCardDesktop({ featured }: { featured: FeaturedBusiness }) {
     <div className="relative h-screen min-h-[600px] max-h-[800px] w-full">
       <div className="absolute inset-0">
         {videoUrl ? (
-          <video autoPlay loop muted playsInline className="w-full h-full object-cover">
+          <video autoPlay loop muted playsInline className="w-full h-full object-contain">
             <source src={videoUrl} type="video/mp4" />
           </video>
         ) : bannerUrl ? (
-          <Image src={bannerUrl} alt={displayTitle} fill className="object-cover" priority />
+          <Image src={bannerUrl} alt={displayTitle} fill className="object-contain" priority />
         ) : (
           <div className={`w-full h-full bg-gradient-to-br ${generateGradient(featured.business.slug)}`} />
         )}

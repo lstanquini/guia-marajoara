@@ -283,6 +283,19 @@ export default function AdminCategoriasPage() {
       <div className="min-h-screen bg-gray-50 pb-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
           
+          {/* Header com Botão Adicionar */}
+          <div className="flex items-center justify-between mb-4 md:mb-6">
+            <h1 className="text-xl md:text-2xl font-bold text-gray-900">Categorias</h1>
+            <button
+              onClick={openAddModal}
+              className="flex items-center gap-2 px-4 py-2 bg-[#C2227A] text-white rounded-lg hover:bg-[#A01860] transition-colors font-semibold text-sm md:text-base"
+            >
+              <Plus size={18} />
+              <span className="hidden sm:inline">Nova Categoria</span>
+              <span className="sm:hidden">Nova</span>
+            </button>
+          </div>
+
           {/* Dica sobre Ícones */}
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 md:p-4 mb-4 md:mb-6 flex items-start gap-2 md:gap-3">
             <AlertCircle className="w-4 h-4 md:w-5 md:h-5 text-blue-600 mt-0.5 flex-shrink-0" />

@@ -17,12 +17,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Guia Marajoara",
-  description: "O Guia Digital do Bairro Jardim Marajoara",
-  icons: {
-    icon: '/favicon.ico',
-    apple: '/apple-icon.png',
-  },
+  title: "MarajoaraON - Guia Digital do Jardim Marajoara",
+  description: "Descubra os melhores estabelecimentos e cupons de desconto do bairro Jardim Marajoara",
 };
 
 export default function RootLayout({

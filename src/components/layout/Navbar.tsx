@@ -57,14 +57,14 @@ export function Navbar() {
       <nav className={cn('bg-white border-b border-gray-100 sticky top-0 z-30 transition-all duration-300', scrolled ? 'py-3 shadow-md' : 'py-4')}>
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between">
-            <Link href="/" className="flex items-center hover:opacity-80 transition-opacity">
+            <Link href="/" className="flex items-center hover:opacity-80 transition-opacity py-2">
               <Image
                 src="/images/logo-navbar.png"
                 alt="MarajoaraON"
-                width={240}
-                height={72}
+                width={200}
+                height={48}
                 priority
-                className="h-14 md:h-16 w-auto"
+                className="max-h-8 md:max-h-10 w-auto object-contain"
               />
             </Link>
 

@@ -1,16 +1,13 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
-import Link from 'next/link'
-import { useAuth } from '@/contexts/auth-context'
-import { useAdmin } from '@/hooks/useAdmin'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
-import { 
-  ArrowLeft, Plus, Edit2, Trash2, Save, X, AlertCircle, ChevronUp, ChevronDown, 
+import {
+  Plus, Edit2, Trash2, Save, X, AlertCircle, ChevronUp, ChevronDown,
   Upload, Image as ImageIcon
 } from 'lucide-react'
 import { getIconBySlug } from '@/lib/iconMapping'
+import { AdminLayout } from '@/components/admin/AdminLayout'
 
 interface Category {
   id: string
@@ -33,9 +30,6 @@ interface CategoryForm {
 }
 
 export default function AdminCategoriasPage() {
-  const { user, loading: authLoading } = useAuth()
-  const { isAdmin, loading: adminLoading } = useAdmin()
-  const router = useRouter()
   const supabase = createClientComponentClient()
 
   const [categories, setCategories] = useState<Category[]>([])
@@ -57,16 +51,8 @@ export default function AdminCategoriasPage() {
   })
 
   useEffect(() => {
-    if (authLoading || adminLoading) return
-    if (!user || !isAdmin) {
-      router.push('/login')
-    }
-  }, [user, isAdmin, authLoading, adminLoading, router])
-
-  useEffect(() => {
-    if (!isAdmin) return
     loadCategories()
-  }, [isAdmin])
+  }, [])
 
   async function loadCategories() {
     setLoading(true)
@@ -292,62 +278,8 @@ export default function AdminCategoriasPage() {
     } finally { setReordering(false) }
   }
   
-  if (authLoading || adminLoading) {
-    return <div className="min-h-screen flex items-center justify-center">Carregando...</div>
-  }
-
-  if (!user || !isAdmin) {
-    return null
-  }
-
   return (
-    <>
-      {/* Header Mobile - Sticky */}
-      <div className="sticky top-0 z-10 bg-white shadow md:hidden">
-        <div className="px-4 py-3">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-3">
-              <Link href="/admin" className="p-2 hover:bg-gray-100 rounded-lg">
-                <ArrowLeft className="w-5 h-5" />
-              </Link>
-              <h1 className="text-lg font-bold text-gray-900">Categorias</h1>
-            </div>
-            <button
-              onClick={openAddModal}
-              className="flex items-center gap-2 px-3 py-2 bg-[#C2227A] text-white rounded-lg hover:bg-[#A01860] text-sm"
-            >
-              <Plus size={18} />
-              <span className="hidden xs:inline">Nova</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Header Desktop */}
-      <div className="hidden md:block bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-4">
-              <Link href="/admin" className="p-2 hover:bg-gray-100 rounded-lg">
-                <ArrowLeft className="w-5 h-5" />
-              </Link>
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900">Categorias</h1>
-                <p className="text-gray-500 mt-1">Gerenciar categorias do sistema</p>
-              </div>
-            </div>
-            <button
-              onClick={openAddModal}
-              className="flex items-center gap-2 px-4 py-2 bg-[#C2227A] text-white rounded-lg hover:bg-[#A01860]"
-            >
-              <Plus size={20} />
-              Nova Categoria
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Conteúdo */}
+    <AdminLayout>
       <div className="min-h-screen bg-gray-50 pb-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
           
@@ -625,6 +557,6 @@ export default function AdminCategoriasPage() {
           </div>
         </div>
       )}
-    </>
+    </AdminLayout>
   )
 }

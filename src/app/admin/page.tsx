@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/auth-context'
 import { useAdmin } from '@/hooks/useAdmin'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { Building2, CheckCircle, XCircle, Clock, Eye, Ban, Copy, Check, Info, MapPin, Phone, Mail, Globe, Instagram as InstagramIcon, MoreVertical, Edit, Settings, LogOut, ExternalLink, User, FileText } from 'lucide-react'
+import { AdminLayout } from '@/components/admin/AdminLayout'
 
 interface Business {
   id: string
@@ -84,14 +85,6 @@ export default function AdminPage() {
   const [businessToApprove, setBusinessToApprove] = useState<Business | null>(null)
   const [selectedPlan, setSelectedPlan] = useState<'basic' | 'premium'>('basic')
   const [approving, setApproving] = useState(false)
-
-  useEffect(() => {
-    if (authLoading || adminLoading) return
-
-    if (!user || !isAdmin) {
-      router.push('/login')
-    }
-  }, [user, isAdmin, authLoading, adminLoading, router])
 
   useEffect(() => {
     if (!isAdmin) return
@@ -257,29 +250,52 @@ const approveBusiness = async () => {
     if (!confirmed) return
 
     try {
-      const { error: partnerError } = await supabase
+      console.log('Desativando empresa:', businessId)
+
+      // Atualizar partners (pode não existir ainda se empresa só foi cadastrada)
+      const { error: partnerError, data: partnerData } = await supabase
         .from('partners')
         .update({ status: 'inactive' })
         .eq('business_id', businessId)
+        .select()
 
-      if (partnerError) throw partnerError
+      if (partnerError) {
+        console.error('Erro ao desativar partner:', partnerError)
+        // Não bloqueia se partner não existir
+        if (partnerError.code !== 'PGRST116') { // PGRST116 = not found
+          throw partnerError
+        }
+      } else {
+        console.log('Partner desativado:', partnerData)
+      }
 
-      const { error: businessError } = await supabase
+      // Atualizar status da empresa
+      const { error: businessError, data: businessData } = await supabase
         .from('businesses')
-        .update({ status: 'rejected' })
+        .update({
+          status: 'rejected',
+          updated_at: new Date().toISOString()
+        })
         .eq('id', businessId)
+        .select()
 
-      if (businessError) throw businessError
+      if (businessError) {
+        console.error('Erro ao desativar business:', businessError)
+        throw new Error(`Erro ao desativar empresa: ${businessError.message}`)
+      }
 
+      console.log('Empresa desativada:', businessData)
+
+      // Atualizar estado local
       setBusinesses(businesses.map(b =>
         b.id === businessId ? { ...b, status: 'rejected' as const } : b
       ))
 
       setShowActionsMenu(null)
-      alert('Empresa desativada com sucesso')
-    } catch (error) {
-      console.error('Erro:', error)
-      alert('Erro ao desativar empresa')
+      alert('Empresa desativada com sucesso!')
+    } catch (error: any) {
+      console.error('Erro completo ao desativar:', error)
+      alert(`Erro ao desativar empresa: ${error.message || 'Erro desconhecido'}`)
     }
   }
 
@@ -377,71 +393,7 @@ const approveBusiness = async () => {
   })
 
   return (
-    <>
-      {/* Header Mobile - Sticky */}
-      <div className="sticky top-0 z-20 bg-white shadow md:hidden">
-        <div className="px-4 py-3">
-          <h1 className="text-lg font-bold text-gray-900 mb-3">Administração</h1>
-          <div className="grid grid-cols-2 gap-2 mb-2">
-            <Link href="/admin/categorias" className="px-3 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 text-center text-xs font-medium">
-              Categorias
-            </Link>
-            <Link href="/admin/planos" className="px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-center text-xs font-medium">
-              Planos
-            </Link>
-            <Link href="/admin/destaques" className="px-3 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 text-center text-xs font-medium">
-              Destaques
-            </Link>
-            <Link href="/admin/mari" className="px-3 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700 text-center text-xs font-medium">
-              Mari
-            </Link>
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-            <Link href="/" className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-center text-xs font-medium flex items-center justify-center gap-1">
-              <ExternalLink size={14} />
-              Ver Site
-            </Link>
-            <button onClick={signOut} className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-xs font-medium flex items-center justify-center gap-1">
-              <LogOut size={14} />
-              Sair
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Header Desktop */}
-      <div className="hidden md:block bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex justify-between items-start">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Administração</h1>
-              <p className="text-gray-500 mt-1">Gerenciar empresas do Guia Marajoara</p>
-            </div>
-            <div className="flex gap-4">
-              <Link href="/admin/categorias" className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 text-sm">
-                Categorias
-              </Link>
-              <Link href="/admin/planos" className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-sm">
-                Planos
-              </Link>
-              <Link href="/admin/destaques" className="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 text-sm">
-                Destaques
-              </Link>
-              <Link href="/admin/mari" className="px-4 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700 text-sm">
-                Mari
-              </Link>
-              <Link href="/" className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm">
-                Ver Site
-              </Link>
-              <button onClick={signOut} className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm">
-                Sair
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Conteúdo */}
+    <AdminLayout>
       <div className="min-h-screen bg-gray-50 pb-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
           
@@ -1154,6 +1106,6 @@ const approveBusiness = async () => {
           </div>
         </div>
       )}
-    </>
+    </AdminLayout>
   )
 }

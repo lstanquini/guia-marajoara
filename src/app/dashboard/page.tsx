@@ -50,10 +50,13 @@ export default function DashboardPage() {
     }
   }, [user, authLoading, router])
 
-  // Redireciona admin para /admin
+  // Redireciona admin para /admin (exceto se estiver editando uma empresa)
   useEffect(() => {
     if (!authLoading && !adminLoading && user && isAdmin) {
-      router.push('/admin')
+      const adminViewingBusiness = localStorage.getItem('admin_viewing_business')
+      if (!adminViewingBusiness) {
+        router.push('/admin')
+      }
     }
   }, [user, isAdmin, authLoading, adminLoading, router])
 
@@ -228,8 +231,28 @@ export default function DashboardPage() {
   const planType = businessData.plan_type
   const maxCoupons = planType === 'premium' ? 10 : 5
 
+  const exitAdminMode = () => {
+    localStorage.removeItem('admin_viewing_business')
+    router.push('/admin')
+  }
+
   return (
     <>
+      {/* Banner de Admin Editando */}
+      {isAdmin && (
+        <div className="bg-purple-600 text-white py-2 px-4 text-center">
+          <p className="text-sm">
+            <strong>Modo Admin:</strong> Você está editando esta empresa.
+            <button
+              onClick={exitAdminMode}
+              className="ml-3 underline hover:no-underline font-semibold"
+            >
+              Voltar ao Painel Admin
+            </button>
+          </p>
+        </div>
+      )}
+
       {/* ========== VERSÃO MOBILE (< md) ========== */}
       <div className="md:hidden min-h-screen bg-gray-50">
         <div className="bg-white shadow sticky top-0 z-10">

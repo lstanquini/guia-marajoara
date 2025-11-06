@@ -54,17 +54,17 @@ export function Navbar() {
         </div>
       </div>
       
-      <nav className={cn('bg-white border-b border-gray-100 sticky top-0 z-30 transition-all duration-300', scrolled ? 'py-1.5 shadow-md' : 'py-2')}>
+      <nav className={cn('bg-white border-b border-gray-100 sticky top-0 z-30 transition-all duration-300', scrolled ? 'py-2 shadow-md' : 'py-3')}>
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between">
             <Link href="/" className="flex items-center hover:opacity-80 transition-opacity">
               <Image
                 src="/images/logo-navbar.png"
                 alt="MarajoaraON"
-                width={320}
-                height={80}
+                width={200}
+                height={50}
                 priority
-                className="h-12 md:h-14 w-auto object-contain"
+                className="h-10 md:h-11 w-auto object-contain"
               />
             </Link>
 

@@ -34,7 +34,7 @@ import {
   Package, Truck, Car, Boxes, PackageCheck, TramFront,
 
   // Negócios - ícones únicos
-  Store, Users, Briefcase, Landmark, UserTie,
+  Store, Users, Briefcase, Landmark,
 
   // Educação - ícones únicos
   Book, GraduationCap, School, BookOpen, Library,
@@ -153,7 +153,7 @@ export const slugToIconMap: Record<string, LucideIcon> = {
 
   // Negócios - ícones únicos
   'empresa': Briefcase,
-  'escritorio': UserTie,
+  'escritorio': Briefcase,
   'negocios': Landmark,
   'consultoria': Users,
 

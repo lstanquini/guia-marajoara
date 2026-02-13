@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import { AnalyticsScripts } from '@/components/analytics/AnalyticsScripts'
 import { AnalyticsRouteTracker } from '@/components/analytics/AnalyticsRouteTracker'
 import { CookieConsentBanner } from '@/components/analytics/CookieConsentBanner'
@@ -11,7 +12,9 @@ export function AnalyticsProvider() {
   return (
     <>
       <AnalyticsScripts />
-      <AnalyticsRouteTracker />
+      <Suspense fallback={null}>
+        <AnalyticsRouteTracker />
+      </Suspense>
       <CookieConsentBanner enabled={analyticsEnabled} />
     </>
   )

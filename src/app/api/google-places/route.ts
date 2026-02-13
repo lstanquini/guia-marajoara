@@ -4,6 +4,10 @@ export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams
   const placeId = searchParams.get('placeId')
   const query = searchParams.get('query')
+  const neighborhood = searchParams.get('neighborhood')
+  const city = searchParams.get('city')
+  const state = searchParams.get('state')
+  const address = searchParams.get('address')
 
   // Use server key first for Places Web Service calls.
   // Keep NEXT_PUBLIC fallback to avoid immediate breakage in older environments.
@@ -36,25 +40,64 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Se temos query, buscar pelo nome/endereço
+    // Se temos query, buscar candidatos com contexto (mais inteligente e econômico).
+    // Só chamamos place details depois que o usuário escolhe um resultado para vincular.
     if (query) {
-      const response = await fetch(
-        `https://maps.googleapis.com/maps/api/place/findplacefromtext/json?input=${encodeURIComponent(query)}&inputtype=textquery&fields=place_id,name,formatted_address,geometry&key=${apiKey}&language=pt-BR`
-      )
-      const data = await response.json()
+      const clean = (value: string | null) => (value || '').trim()
+      const q = clean(query)
+      const n = clean(neighborhood)
+      const c = clean(city)
+      const s = clean(state)
+      const a = clean(address)
 
-      if (data.status === 'OK' && data.candidates && data.candidates.length > 0) {
-        // Pegar o primeiro resultado e buscar detalhes
-        const placeId = data.candidates[0].place_id
+      const queryVariants = [
+        `${q}${n ? `, ${n}` : ''}${c ? `, ${c}` : ''}${s ? `, ${s}` : ''}`,
+        `${q}${a ? `, ${a}` : ''}${c ? `, ${c}` : ''}${s ? `, ${s}` : ''}`,
+        q,
+      ]
+        .map(v => v.replace(/\s+/g, ' ').trim())
+        .filter(Boolean)
+        .filter((v, i, arr) => arr.indexOf(v) === i)
+        .slice(0, 3)
 
-        const detailsResponse = await fetch(
-          `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=name,rating,user_ratings_total,reviews,formatted_address,geometry,formatted_phone_number,opening_hours,website,photos&key=${apiKey}&language=pt-BR`
+      const allCandidates: Array<{
+        place_id: string
+        name: string
+        formatted_address: string
+        rating?: number
+        user_ratings_total?: number
+      }> = []
+
+      for (const variant of queryVariants) {
+        const response = await fetch(
+          `https://maps.googleapis.com/maps/api/place/findplacefromtext/json?input=${encodeURIComponent(variant)}&inputtype=textquery&fields=place_id,name,formatted_address,rating,user_ratings_total&locationbias=circle:4000@-23.6274,-46.7078&key=${apiKey}&language=pt-BR`
         )
-        const detailsData = await detailsResponse.json()
+        const data = await response.json()
 
-        if (detailsData.status === 'OK') {
-          return NextResponse.json(detailsData.result)
+        if (data.status === 'OK' && Array.isArray(data.candidates) && data.candidates.length > 0) {
+          for (const candidate of data.candidates) {
+            if (!candidate?.place_id) continue
+
+            allCandidates.push({
+              place_id: candidate.place_id,
+              name: candidate.name || 'Sem nome',
+              formatted_address: candidate.formatted_address || '',
+              rating: candidate.rating,
+              user_ratings_total: candidate.user_ratings_total,
+            })
+          }
+
+          // Encontrou resultados nesta variante: para reduzir custo/latência, não tenta as próximas.
+          break
         }
+      }
+
+      if (allCandidates.length > 0) {
+        const unique = Array.from(
+          new Map(allCandidates.map(c => [c.place_id, c])).values()
+        ).slice(0, 5)
+
+        return NextResponse.json(unique)
       }
 
       return NextResponse.json(

@@ -204,8 +204,16 @@ export default function EditarEmpresaPage() {
     setGoogleSearchResults([])
 
     try {
-      const query = `${googleSearchQuery}, ${formData.neighborhood || formData.city}`
-      const response = await fetch(`/api/google-places?query=${encodeURIComponent(query)}`)
+      const params = new URLSearchParams({
+        query: googleSearchQuery.trim(),
+      })
+
+      if (formData.neighborhood) params.set('neighborhood', formData.neighborhood)
+      if (formData.city) params.set('city', formData.city)
+      if (formData.state) params.set('state', formData.state)
+      if (formData.address) params.set('address', formData.address)
+
+      const response = await fetch(`/api/google-places?${params.toString()}`)
 
       if (!response.ok) {
         throw new Error('Erro ao buscar no Google')
@@ -213,16 +221,7 @@ export default function EditarEmpresaPage() {
 
       const data = await response.json()
 
-      if (data.place_id) {
-        // Retornou um único resultado
-        setGoogleSearchResults([{
-          place_id: data.place_id,
-          name: data.name,
-          formatted_address: data.formatted_address,
-          rating: data.rating,
-          user_ratings_total: data.user_ratings_total
-        }])
-      } else if (Array.isArray(data)) {
+      if (Array.isArray(data) && data.length > 0) {
         setGoogleSearchResults(data)
       } else {
         toast.error('Nenhum resultado encontrado')

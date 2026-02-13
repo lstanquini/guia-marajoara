@@ -208,24 +208,14 @@ export function BusinessCard({ business, variant = 'default' }: BusinessCardProp
                   <span className="text-sm font-semibold text-gray-800 ml-1">
                     {business.rating.toFixed(1)}
                   </span>
-                  <span className="text-xs text-gray-500 ml-1">
-                    ({business.total_reviews || 0})
-                  </span>
+                  {(business.total_reviews || 0) > 0 && (
+                    <span className="text-xs text-gray-500 ml-1">
+                      ({business.total_reviews} avaliacoes)
+                    </span>
+                  )}
                 </>
               ) : (
-                <div className="flex items-center gap-1">
-                  <div className="flex items-center">
-                    {[...Array(5)].map((_, i) => (
-                      <Star
-                        key={i}
-                        size={14}
-                        className="text-gray-300"
-                        strokeWidth={1.5}
-                      />
-                    ))}
-                  </div>
-                  <span className="text-xs text-gray-400 ml-1">0 avaliações</span>
-                </div>
+                <span className="text-xs text-gray-400">Sem avaliacoes</span>
               )}
             </div>
           </Link>

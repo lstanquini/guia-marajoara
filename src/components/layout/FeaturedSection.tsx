@@ -143,7 +143,10 @@ function HeroCardMobile({ featured }: { featured: FeaturedBusiness }) {
             {featured.business.rating && featured.business.rating > 0 && (
               <span className="px-3 py-1.5 bg-white/25 backdrop-blur-md text-white rounded-full text-xs font-semibold flex items-center gap-1">
                 <Star className="w-3.5 h-3.5" fill="currentColor" />
-                {featured.business.rating.toFixed(1)} ({featured.business.total_reviews})
+                {featured.business.rating.toFixed(1)}
+                {(featured.business.total_reviews || 0) > 0 && (
+                  <span>({featured.business.total_reviews})</span>
+                )}
               </span>
             )}
           </div>

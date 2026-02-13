@@ -17,6 +17,7 @@ interface Business {
   logo_url: string | null
   banner_url: string | null
   rating: number | null
+  total_reviews: number | null
   address: string
   neighborhood: string | null
   city: string
@@ -175,9 +176,14 @@ function BusinessCard({ business }: { business: Business }) {
             <div className="flex items-center gap-1 text-yellow-500">
               <Star className="w-4 h-4" fill="currentColor" />
               <span className="font-semibold">{business.rating.toFixed(1)}</span>
+              {(business.total_reviews || 0) > 0 && (
+                <span className="text-xs text-gray-500 ml-1">
+                  ({business.total_reviews} avaliacoes)
+                </span>
+              )}
             </div>
           ) : (
-            <span className="text-gray-400 text-xs">Sem avaliações</span>
+            <span className="text-gray-400 text-xs">Sem avaliacoes</span>
           )}
           <span className="text-gray-400 text-xs">{timeAgo}</span>
         </div>
@@ -205,7 +211,7 @@ export function RecentBusinesses() {
         // Busca as 9 últimas empresas aprovadas
         const { data: businessesData, error: bizError } = await supabase
           .from('businesses')
-          .select('id, name, slug, category_main, category_sub, logo_url, banner_url, rating, address, neighborhood, city, created_at')
+          .select('id, name, slug, category_main, category_sub, logo_url, banner_url, rating, total_reviews, address, neighborhood, city, created_at')
           .eq('status', 'approved')
           .order('created_at', { ascending: false })
           .limit(9)

@@ -5,11 +5,15 @@ export async function GET(request: NextRequest) {
   const placeId = searchParams.get('placeId')
   const query = searchParams.get('query')
 
-  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
+  // Use server key first for Places Web Service calls.
+  // Keep NEXT_PUBLIC fallback to avoid immediate breakage in older environments.
+  const apiKey =
+    process.env.GOOGLE_MAPS_SERVER_API_KEY ||
+    process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
 
   if (!apiKey) {
     return NextResponse.json(
-      { error: 'Google Maps API key not configured' },
+      { error: 'Google Maps API key not configured (server key preferred)' },
       { status: 500 }
     )
   }

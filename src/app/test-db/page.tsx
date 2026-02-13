@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@/lib/supabase'
 
 export default function TestPage() {
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading')
@@ -14,6 +14,8 @@ export default function TestPage() {
 
   async function testConnection() {
     try {
+      const supabase = createClient()
+
       // Testa buscar categorias
       const { data: categories, error } = await supabase
         .from('categories')

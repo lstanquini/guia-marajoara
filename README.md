@@ -1,5 +1,10 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Project Handoff
+
+- Full technical handoff and current operational status:
+  - `docs/PROJECT_HANDOFF.md`
+
 ## Getting Started
 
 First, run the development server:

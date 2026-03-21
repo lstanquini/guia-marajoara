@@ -2,6 +2,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 
 // Importações dos Componentes Principais
 import HeroSection from '@/components/layout/HeroSection'
@@ -17,14 +18,14 @@ import { SearchBar } from '@/components/ui/SearchBar'
  * Ele captura o texto e redireciona o usuário para a página /busca.
  */
 function HomePageSearchBar() {
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState('')
+  const router = useRouter()
 
   const handleSearch = () => {
     if (query.trim()) {
-      // Redireciona para a página de busca com o parâmetro de query
-      window.location.href = `/busca?q=${encodeURIComponent(query)}`;
+      router.push(`/busca?q=${encodeURIComponent(query)}`)
     }
-  };
+  }
 
   return (
     <SearchBar
@@ -34,7 +35,7 @@ function HomePageSearchBar() {
       placeholder="Buscar estabelecimentos, serviços..."
       className="shadow-xl"
     />
-  );
+  )
 }
 
 /**

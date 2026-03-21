@@ -3,9 +3,27 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase'
 
+interface TestCategory {
+  id: string
+  icon: string
+  name: string
+}
+
+interface TestBusinessResult {
+  id: string
+  name: string
+  category_sub: string | null
+  relevance: number
+}
+
+interface TestPageData {
+  categories: TestCategory[] | null
+  searchResult: TestBusinessResult[] | null
+}
+
 export default function TestPage() {
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading')
-  const [data, setData] = useState<any>(null)
+  const [data, setData] = useState<TestPageData | null>(null)
   const [error, setError] = useState<string>('')
 
   useEffect(() => {
@@ -30,8 +48,9 @@ export default function TestPage() {
       
       setData({ categories, searchResult })
       setStatus('success')
-    } catch (err: any) {
-      setError(err.message)
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Erro desconhecido ao testar conexão'
+      setError(message)
       setStatus('error')
     }
   }
@@ -61,7 +80,7 @@ export default function TestPage() {
             <div>
               <h2 className="text-xl font-semibold mb-3">Categorias ({data.categories?.length})</h2>
               <div className="grid grid-cols-2 gap-2">
-                {data.categories?.map((cat: any) => (
+                {data.categories?.map((cat) => (
                   <div key={cat.id} className="flex items-center gap-2 p-2 bg-gray-50 rounded">
                     <span className="text-2xl">{cat.icon}</span>
                     <span>{cat.name}</span>
@@ -74,7 +93,7 @@ export default function TestPage() {
               <h2 className="text-xl font-semibold mb-3">Busca por "pizza"</h2>
               {data.searchResult && data.searchResult.length > 0 ? (
                 <div className="space-y-2">
-                  {data.searchResult.map((business: any) => (
+                  {data.searchResult.map((business) => (
                     <div key={business.id} className="p-3 bg-gray-50 rounded">
                       <p className="font-semibold">{business.name}</p>
                       <p className="text-sm text-gray-600">{business.category_sub}</p>

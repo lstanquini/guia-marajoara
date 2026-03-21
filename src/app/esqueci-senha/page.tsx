@@ -24,9 +24,10 @@ export default function EsqueciSenhaPage() {
       if (error) throw error
 
       setSuccess(true)
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Erro ao solicitar reset:', err)
-      setError(err.message || 'Erro ao enviar email de recuperação')
+      const message = err instanceof Error ? err.message : 'Erro ao enviar email de recuperação'
+      setError(message)
     } finally {
       setLoading(false)
     }

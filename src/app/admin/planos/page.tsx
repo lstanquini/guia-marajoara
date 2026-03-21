@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { Save, Package } from 'lucide-react'
 import { AdminLayout } from '@/components/admin/AdminLayout'
+import { useToast } from '@/contexts/toast-context'
 
 interface PlanTemplate {
   id: string
@@ -17,6 +18,7 @@ interface PlanTemplate {
 
 export default function PlanosPage() {
   const supabase = createClientComponentClient()
+  const toast = useToast()
 
   const [plans, setPlans] = useState<PlanTemplate[]>([])
   const [loading, setLoading] = useState(true)
@@ -60,16 +62,16 @@ export default function PlanosPage() {
 
       if (error) throw error
 
-      alert('Plano atualizado com sucesso!')
+      toast.success('Plano atualizado com sucesso!')
     } catch (error) {
       console.error('Erro ao atualizar plano:', error)
-      alert('Erro ao atualizar plano')
+      toast.error('Erro ao atualizar plano')
     } finally {
       setSaving(null)
     }
   }
 
-  const handleChange = (planId: string, field: keyof PlanTemplate, value: any) => {
+  const handleChange = (planId: string, field: keyof PlanTemplate, value: string | number | null) => {
     setPlans(plans.map(p =>
       p.id === planId ? { ...p, [field]: value } : p
     ))

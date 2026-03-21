@@ -92,7 +92,6 @@ export default function HorariosPage() {
           if (saved && !hasLoadedFromStorage.current) {
             const parsedData = JSON.parse(saved)
             setSchedule(parsedData)
-            console.log('Horários restaurados do localStorage')
           } else {
             setSchedule(dbData)
           }

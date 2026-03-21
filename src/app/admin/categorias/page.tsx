@@ -8,6 +8,7 @@ import {
 } from 'lucide-react'
 import { getIconBySlug } from '@/lib/iconMapping'
 import { AdminLayout } from '@/components/admin/AdminLayout'
+import { useToast } from '@/contexts/toast-context'
 
 interface Category {
   id: string
@@ -31,6 +32,7 @@ interface CategoryForm {
 
 export default function AdminCategoriasPage() {
   const supabase = createClientComponentClient()
+  const toast = useToast()
 
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
@@ -90,11 +92,11 @@ export default function AdminCategoriasPage() {
   async function handleImageUpload(file: File) {
     if (!file) return
     if (file.size > 2 * 1024 * 1024) {
-      alert('Imagem muito grande! Máximo 2MB.')
+      toast.warning('Imagem muito grande! Máximo 2MB.')
       return
     }
     if (!file.type.startsWith('image/')) {
-      alert('Por favor, selecione apenas imagens.')
+      toast.warning('Por favor, selecione apenas imagens.')
       return
     }
     setUploadingImage(true)
@@ -112,7 +114,7 @@ export default function AdminCategoriasPage() {
       setImagePreview(publicUrl)
     } catch (error) {
       console.error('Erro no upload:', error)
-      alert('Erro ao fazer upload da imagem')
+      toast.error('Erro ao fazer upload da imagem')
     } finally {
       setUploadingImage(false)
     }
@@ -165,7 +167,7 @@ export default function AdminCategoriasPage() {
   
   async function handleAdd() {
     if (!formData.name || !formData.slug || !formData.icon) {
-      alert('Preencha todos os campos obrigatórios')
+      toast.warning('Preencha todos os campos obrigatórios')
       return
     }
     setSaving(true)
@@ -182,11 +184,14 @@ export default function AdminCategoriasPage() {
       if (error) throw error
       await loadCategories()
       setShowAddModal(false)
-      alert('Categoria adicionada com sucesso!')
-    } catch (error: any) {
+      toast.success('Categoria adicionada com sucesso!')
+    } catch (error: unknown) {
       console.error('Erro ao adicionar categoria:', error)
-      if (error.code === '23505') alert('Já existe uma categoria com esse slug')
-      else alert('Erro ao adicionar categoria')
+      if ((error as { code?: string }).code === '23505') {
+        toast.warning('Já existe uma categoria com esse slug')
+      } else {
+        toast.error('Erro ao adicionar categoria')
+      }
     } finally {
       setSaving(false)
     }
@@ -194,7 +199,7 @@ export default function AdminCategoriasPage() {
 
   async function handleEdit() {
     if (!editingCategory || !formData.name || !formData.icon) {
-      alert('Preencha todos os campos obrigatórios')
+      toast.warning('Preencha todos os campos obrigatórios')
       return
     }
     setSaving(true)
@@ -214,10 +219,10 @@ export default function AdminCategoriasPage() {
       if (error) throw error
       await loadCategories()
       setShowEditModal(false)
-      alert('Categoria atualizada com sucesso!')
+      toast.success('Categoria atualizada com sucesso!')
     } catch (error) {
       console.error('Erro ao atualizar categoria:', error)
-      alert('Erro ao atualizar categoria')
+      toast.error('Erro ao atualizar categoria')
     } finally {
       setSaving(false)
     }
@@ -225,7 +230,7 @@ export default function AdminCategoriasPage() {
   
   async function handleDelete(category: Category) {
     if (category.business_count && category.business_count > 0) {
-      alert(`Não é possível excluir esta categoria pois existem ${category.business_count} empresa(s) vinculada(s) a ela.`)
+      toast.warning(`Não é possível excluir esta categoria pois existem ${category.business_count} empresa(s) vinculada(s) a ela.`)
       return
     }
     const confirmed = confirm(`Tem certeza que deseja excluir a categoria "${category.name}"?`)
@@ -235,10 +240,10 @@ export default function AdminCategoriasPage() {
       const { error } = await supabase.from('categories').delete().eq('id', category.id)
       if (error) throw error
       await loadCategories()
-      alert('Categoria excluída com sucesso!')
+      toast.success('Categoria excluída com sucesso!')
     } catch (error) {
       console.error('Erro ao excluir categoria:', error)
-      alert('Erro ao excluir categoria')
+      toast.error('Erro ao excluir categoria')
     }
   }
   

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/contexts/auth-context'
 import { useAdmin } from '@/hooks/useAdmin'
@@ -16,6 +16,7 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
   const { user, signOut } = useAuth()
   const { isAdmin } = useAdmin()
   const pathname = usePathname()
+  const router = useRouter()
   const [touchStart, setTouchStart] = useState(0)
   const [touchEnd, setTouchEnd] = useState(0)
 
@@ -35,10 +36,8 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
   }
 
   const handleLogout = async () => {
-    console.log('🔴 Logout iniciado no mobile')
     try {
       await signOut()
-      console.log('✅ Logout concluído')
       onClose()
     } catch (error) {
       console.error('❌ Erro no logout:', error)
@@ -49,8 +48,8 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
   const handleLogin = (e: React.MouseEvent | React.TouchEvent) => {
     e.preventDefault()
     e.stopPropagation()
-    console.log('🔵 Redirecionando para login')
-    window.location.href = '/login'
+    onClose()
+    router.push('/login')
   }
 
   useEffect(() => {
@@ -78,7 +77,7 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
       e.preventDefault()
       onClose()
       setTimeout(() => {
-        window.location.href = href
+        router.push(href)
       }, 150)
     }
     
@@ -262,7 +261,7 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
                       e.preventDefault()
                       onClose()
                       setTimeout(() => {
-                        window.location.href = '/cadastro'
+                        router.push('/cadastro')
                       }, 150)
                     }}
                     className="flex items-center justify-center gap-2 px-4 py-3.5 bg-gradient-to-r from-[#7CB342] to-[#6A9A38] text-white rounded-lg hover:shadow-lg transition-all font-semibold text-sm cursor-pointer"

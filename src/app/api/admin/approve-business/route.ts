@@ -8,8 +8,6 @@ export const runtime = 'nodejs'
 
 export async function POST(request: NextRequest) {
   try {
-    console.log('🚀 ===== INÍCIO =====')
-    
     const authHeader = request.headers.get('authorization')
     
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -18,7 +16,6 @@ export async function POST(request: NextRequest) {
     }
 
     const accessToken = authHeader.replace('Bearer ', '')
-    console.log('✅ Token recebido')
 
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -38,8 +35,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Token inválido' }, { status: 401 })
     }
 
-    console.log('✅ Usuário:', user.email)
-
     const { data: admin } = await supabase
       .from('admins')
       .select('id')
@@ -50,8 +45,6 @@ export async function POST(request: NextRequest) {
       console.error('❌ Não é admin')
       return NextResponse.json({ error: 'Sem permissão' }, { status: 403 })
     }
-
-    console.log('✅ É admin!')
 
     const { businessId } = await request.json()
 
@@ -76,12 +69,8 @@ export async function POST(request: NextRequest) {
       }, { status: 400 })
     }
 
-    console.log('✅ Empresa:', business.name)
-
     // Gerar senha
     const tempPassword = generatePassword()
-
-    console.log('🔄 Verificando se usuário já existe...')
 
     // Buscar usuário existente
     const { data: listData } = await supabase.auth.admin.listUsers()
@@ -90,8 +79,6 @@ export async function POST(request: NextRequest) {
 
     if (!targetUser) {
       // Criar NOVO usuário
-      console.log('🔄 Criando NOVO usuário...')
-
       const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
         email: business.responsible_email,
         password: tempPassword,
@@ -106,7 +93,6 @@ export async function POST(request: NextRequest) {
       if (createError) {
         // Se der erro de usuário duplicado, buscar o usuário existente
         if (createError.message?.includes('already') || createError.message?.includes('exists')) {
-          console.log('⚠️ Usuário já existe (erro ao criar), buscando...')
           const { data: retryList } = await supabase.auth.admin.listUsers()
           targetUser = retryList?.users?.find(u => u.email === business.responsible_email)
 
@@ -121,19 +107,15 @@ export async function POST(request: NextRequest) {
           }, { status: 400 })
         }
       } else {
-        console.log('✅ Usuário criado:', newUser.user.id)
         targetUser = newUser.user
         isNewUser = true
 
         // Aguardar
         await new Promise(resolve => setTimeout(resolve, 500))
       }
-    } else {
-      console.log('⚠️ Usuário JÁ EXISTE:', targetUser.id)
     }
 
     // UPSERT profile (cria ou atualiza)
-    console.log('🔄 Garantindo profile...')
     const { error: profileError } = await supabase
       .from('profiles')
       .upsert({
@@ -152,10 +134,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Erro garantir profile' }, { status: 500 })
     }
 
-    console.log('✅ Profile garantido!')
-
     // UPSERT partner (cria ou atualiza)
-    console.log('🔄 Garantindo partner...')
     const { error: partnerError } = await supabase
       .from('partners')
       .upsert({
@@ -176,11 +155,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Erro garantir partner' }, { status: 500 })
     }
 
-    console.log('✅ Partner garantido!')
-
     // Aprovar empresa
-    // Aprovar empresa
-    console.log('🔄 Aprovando empresa...')
     const { error: updateError } = await supabase
       .from('businesses')
       .update({
@@ -195,13 +170,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Erro aprovar empresa' }, { status: 500 })
     }
 
-    console.log('✅ APROVADO!')
-
     // ✅ NOVO: Enviar email de boas-vindas
-        // ✅ NOVO: Enviar email de boas-vindas
     try {
-      console.log('📧 Enviando email de aprovação...')
-      
       const emailData = getApprovalEmail({
         businessName: business.name,
         responsibleName: business.responsible_name || business.name,
@@ -221,14 +191,10 @@ export async function POST(request: NextRequest) {
         emailData.subject,
         emailData.html
       )
-
-      console.log('✅ Email enviado com sucesso!')
     } catch (emailError) {
       console.error('⚠️ Erro ao enviar email:', emailError)
       // Não falha a aprovação se o email der erro
     }
-
-    console.log('🎉 SUCESSO TOTAL!')
 
     return NextResponse.json({
       success: true,

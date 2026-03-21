@@ -19,8 +19,6 @@ export default function LoginPage() {
   useEffect(() => {
     // Se o usuário está logado e já verificamos se é admin
     if (user && !adminLoading) {
-      console.log('🔵 Usuário logado, redirecionando...', { isAdmin })
-      
       if (isAdmin) {
         router.push('/admin')
       } else {

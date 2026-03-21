@@ -3,6 +3,8 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
+import { useRouter } from 'next/navigation'
+import { useToast } from '@/contexts/toast-context'
 import { Button } from '@/components/ui/Button'
 import { Modal } from '@/components/ui/Modal'
 import { Star, MapPin, Tag } from 'lucide-react'
@@ -51,13 +53,15 @@ function generateGradient(slug: string): string {
 }
 
 export function BusinessCard({ business, variant = 'default' }: BusinessCardProps) {
+  const router = useRouter()
+  const toast = useToast()
   const [modalOpen, setModalOpen] = useState(false)
   const [formData, setFormData] = useState({ name: '', whatsapp: '' })
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const handleSubmit = async () => {
     if (!formData.name || !formData.whatsapp) {
-      alert('Por favor, preencha todos os campos')
+      toast.warning('Por favor, preencha todos os campos')
       return
     }
 
@@ -254,7 +258,7 @@ export function BusinessCard({ business, variant = 'default' }: BusinessCardProp
               onClick={(e) => {
                 e.preventDefault()
                 e.stopPropagation()
-                window.location.href = `/empresas/${business.slug}`
+                router.push(`/empresas/${business.slug}`)
               }}
               className={business.whatsapp ? 'flex-1' : 'w-full'}
             >

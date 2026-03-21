@@ -1,6 +1,14 @@
 'use client'
 
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
-import type { Database } from '@/types/supabase'
+import { createBrowserClient } from '@supabase/ssr'
 
-export const createClient = () => createClientComponentClient<Database>()
+export const createClient = () => {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+  if (!url || !anonKey) {
+    throw new Error('Supabase env vars are not configured')
+  }
+
+  return createBrowserClient(url, anonKey)
+}

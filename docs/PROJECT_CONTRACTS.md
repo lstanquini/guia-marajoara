@@ -1,4 +1,6 @@
 # PROJECT_CONTRACTS.md - CONTRATOS E DECISÕES IMUTÁVEIS
+> STATUS: base historica. Alguns contratos abaixo refletem fases antigas.
+> Referencia atual da stack e operacao: `docs/PROJECT_HANDOFF.md`.
 ## 🔒 DECISÕES DE ARQUITETURA
 | ID | Data | Decisão | Motivo | Impacto | Autor |
 |----|------|---------|---------|---------|--------|

@@ -56,9 +56,10 @@ export default function RedefinirSenhaPage() {
       setTimeout(() => {
         router.push('/login')
       }, 3000)
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Erro ao redefinir senha:', err)
-      setError(err.message || 'Erro ao redefinir senha')
+      const message = err instanceof Error ? err.message : 'Erro ao redefinir senha'
+      setError(message)
     } finally {
       setLoading(false)
     }

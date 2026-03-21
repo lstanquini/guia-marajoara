@@ -1,4 +1,6 @@
 # PROJECT_HISTORY.md - HISTÓRICO COMPLETO
+> STATUS: historico append-only de fases anteriores.
+> Estado atual do projeto: `docs/PROJECT_HANDOFF.md` e `docs/PRODUCTION_SAFE_IMPROVEMENT_BACKLOG.md`.
 <!-- APPEND ONLY - ORDEM CRONOLÓGICA -->
 
 ## 14/09/2025

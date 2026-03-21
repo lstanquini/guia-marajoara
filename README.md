@@ -4,6 +4,8 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 - Full technical handoff and current operational status:
   - `docs/PROJECT_HANDOFF.md`
+- Production-safe technical improvement backlog (source of truth for ongoing fixes):
+  - `docs/PRODUCTION_SAFE_IMPROVEMENT_BACKLOG.md`
 
 ## Getting Started
 

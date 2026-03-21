@@ -41,7 +41,6 @@ export default function NovoCupomPage() {
       if (saved) {
         const parsedData = JSON.parse(saved)
         setFormData(parsedData)
-        console.log('Dados restaurados do localStorage')
       }
     } catch (err) {
       console.error('Erro ao carregar dados salvos:', err)

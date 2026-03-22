@@ -121,7 +121,6 @@ export default function EditarEmpresaPage() {
           setBusinessId(partner.businessId)
           setFormData(parsedData)
           hasLoadedFromDB.current = true
-          console.log('Dados restaurados do localStorage')
           return // Usar dados salvos ao invés de buscar do banco
         }
       } catch (err) {

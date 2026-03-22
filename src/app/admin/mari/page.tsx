@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '@/contexts/auth-context'
 import { useAdmin } from '@/hooks/useAdmin'
+import { useToast } from '@/contexts/toast-context'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { Upload, X, Play, Save, Image as ImageIcon, Video as VideoIcon } from 'lucide-react'
 import { AdminLayout } from '@/components/admin/AdminLayout'
@@ -38,6 +39,7 @@ interface FormData {
 export default function AdminMariPage() {
   const { user, loading: authLoading } = useAuth()
   const { isAdmin, loading: adminLoading } = useAdmin()
+  const toast = useToast()
   const supabase = createClientComponentClient()
 
   const [settings, setSettings] = useState<MariSettings | null>(null)
@@ -109,12 +111,12 @@ export default function AdminMariPage() {
     if (!file) return
 
     if (!file.type.startsWith('image/')) {
-      alert('Por favor, selecione uma imagem')
+      toast.warning('Por favor, selecione uma imagem')
       return
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      alert('A imagem deve ter no máximo 5MB')
+      toast.warning('A imagem deve ter no máximo 5MB')
       return
     }
 
@@ -133,10 +135,10 @@ export default function AdminMariPage() {
 
       setFormData({ ...formData, photo_url: publicUrl })
       setPreviewPhoto(publicUrl)
-      alert('Foto carregada com sucesso!')
+      toast.success('Foto carregada com sucesso!')
     } catch (error) {
       console.error('Erro:', error)
-      alert('Erro ao fazer upload da foto')
+      toast.error('Erro ao fazer upload da foto')
     } finally {
       setUploadingPhoto(false)
     }
@@ -147,12 +149,12 @@ export default function AdminMariPage() {
     if (!file) return
 
     if (!file.type.startsWith('video/')) {
-      alert('Por favor, selecione um vídeo')
+      toast.warning('Por favor, selecione um vídeo')
       return
     }
 
     if (file.size > 50 * 1024 * 1024) {
-      alert('O vídeo deve ter no máximo 50MB')
+      toast.warning('O vídeo deve ter no máximo 50MB')
       return
     }
 
@@ -171,10 +173,10 @@ export default function AdminMariPage() {
 
       setFormData({ ...formData, video_url: publicUrl })
       setPreviewVideo(publicUrl)
-      alert('Vídeo carregado! Agora adicione uma capa/thumbnail.')
+      toast.success('Vídeo carregado! Agora adicione uma capa/thumbnail.')
     } catch (error) {
       console.error('Erro:', error)
-      alert('Erro ao fazer upload do vídeo')
+      toast.error('Erro ao fazer upload do vídeo')
     } finally {
       setUploadingVideo(false)
     }
@@ -185,12 +187,12 @@ export default function AdminMariPage() {
     if (!file) return
 
     if (!file.type.startsWith('image/')) {
-      alert('Por favor, selecione uma imagem')
+      toast.warning('Por favor, selecione uma imagem')
       return
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      alert('A capa deve ter no máximo 5MB')
+      toast.warning('A capa deve ter no máximo 5MB')
       return
     }
 
@@ -209,10 +211,10 @@ export default function AdminMariPage() {
 
       setFormData({ ...formData, video_thumbnail_url: publicUrl })
       setPreviewThumbnail(publicUrl)
-      alert('Capa do vídeo carregada!')
+      toast.success('Capa do vídeo carregada!')
     } catch (error) {
       console.error('Erro:', error)
-      alert('Erro ao fazer upload da capa')
+      toast.error('Erro ao fazer upload da capa')
     } finally {
       setUploadingThumbnail(false)
     }
@@ -226,12 +228,12 @@ export default function AdminMariPage() {
 
   async function handleSave() {
     if (!formData.photo_url) {
-      alert('Adicione uma foto antes de salvar')
+      toast.warning('Adicione uma foto antes de salvar')
       return
     }
 
     if (formData.video_url && !formData.video_thumbnail_url) {
-      alert('Se você adicionou um vídeo, precisa adicionar uma capa/thumbnail também')
+      toast.warning('Se você adicionou um vídeo, precisa adicionar uma capa/thumbnail também')
       return
     }
 
@@ -265,11 +267,12 @@ export default function AdminMariPage() {
         if (error) throw error
       }
 
-      alert('Configurações salvas com sucesso!')
+      toast.success('Configurações salvas com sucesso!')
       await loadSettings()
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro:', error)
-      alert(`Erro: ${error.message}`)
+      const message = error instanceof Error ? error.message : 'Erro inesperado'
+      toast.error(`Erro: ${message}`)
     } finally {
       setSaving(false)
     }

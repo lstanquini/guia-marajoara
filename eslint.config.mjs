@@ -1,25 +1,35 @@
-import { dirname } from "path";
-import { fileURLToPath } from "url";
-import { FlatCompat } from "@eslint/eslintrc";
+import { defineConfig } from 'eslint/config'
+import nextCoreWebVitals from 'eslint-config-next/core-web-vitals'
+import nextTypeScript from 'eslint-config-next/typescript'
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-const compat = new FlatCompat({
-  baseDirectory: __dirname,
-});
-
-const eslintConfig = [
-  ...compat.extends("next/core-web-vitals", "next/typescript"),
+const eslintConfig = defineConfig([
+  ...nextCoreWebVitals,
+  ...nextTypeScript,
   {
     ignores: [
-      "node_modules/**",
-      ".next/**",
-      "out/**",
-      "build/**",
-      "next-env.d.ts",
+      'node_modules/**',
+      '.next/**',
+      '.obsidian/**',
+      'out/**',
+      'build/**',
+      'next-env.d.ts',
+      'src/**/*.backup.tsx',
+      'src/**/*.disabled',
+      'src/**/*.old',
+      'src/middleware.ts.disabled',
+      'src/components/layout/Navbar.backup.tsx',
     ],
   },
-];
+  {
+    rules: {
+      'react-hooks/set-state-in-effect': 'warn',
+      'react-hooks/static-components': 'warn',
+      '@next/next/no-before-interactive-script-outside-document': 'off',
+      '@typescript-eslint/no-explicit-any': 'warn',
+      'react/no-unescaped-entities': 'warn',
+      '@next/next/no-html-link-for-pages': 'warn',
+    },
+  },
+])
 
-export default eslintConfig;
+export default eslintConfig

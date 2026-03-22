@@ -1,4 +1,6 @@
 # PROJECT_BRAIN.md - ESTADO ATUAL DO PROJETO
+> STATUS: documento historico/legado.
+> Fonte atual de operacao: `docs/PROJECT_HANDOFF.md` e `docs/PRODUCTION_SAFE_IMPROVEMENT_BACKLOG.md`.
 ## 🔴 CHECKPOINT ATUAL
 TRABALHANDO EM: Preparação para validar a seção "Mari Carreira"
 ARQUIVO: docs/mari-carreira-section.html

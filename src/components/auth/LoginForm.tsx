@@ -3,33 +3,25 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/contexts/auth-context'
-import { DEMO_CREDENTIALS } from '@/lib/mock-auth'
 
 export default function LoginForm() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const { login } = useAuth()
+  const { signIn } = useAuth()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
     setLoading(true)
 
-    const success = await login(email, password)
-    
-    if (!success) {
-      setError('Email ou senha inválidos')
+    const result = await signIn(email, password)
+
+    if (!result.success) {
+      setError(result.error || 'Email ou senha invalidos')
       setLoading(false)
     }
-  }
-
-  const fillDemoCredentials = (type: 'admin' | 'partner' | 'user') => {
-    const creds = DEMO_CREDENTIALS[type]
-    setEmail(creds.email)
-    setPassword(creds.password)
-    setError('')
   }
 
   return (
@@ -45,33 +37,6 @@ export default function LoginForm() {
               crie uma nova conta
             </Link>
           </p>
-        </div>
-
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <p className="text-sm font-semibold text-blue-900 mb-2">Contas de Demonstração:</p>
-          <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={() => fillDemoCredentials('admin')}
-              className="text-xs bg-blue-100 text-blue-700 px-3 py-1 rounded-md hover:bg-blue-200"
-            >
-              Admin
-            </button>
-            <button
-              type="button"
-              onClick={() => fillDemoCredentials('partner')}
-              className="text-xs bg-green-100 text-green-700 px-3 py-1 rounded-md hover:bg-green-200"
-            >
-              Parceiro (Pizza)
-            </button>
-            <button
-              type="button"
-              onClick={() => fillDemoCredentials('user')}
-              className="text-xs bg-purple-100 text-purple-700 px-3 py-1 rounded-md hover:bg-purple-200"
-            >
-              Cliente
-            </button>
-          </div>
         </div>
 
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>

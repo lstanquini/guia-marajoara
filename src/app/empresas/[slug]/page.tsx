@@ -1,9 +1,15 @@
 import { notFound } from 'next/navigation';
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs';
+import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import Image from 'next/image';
 import { Award, Clock, Globe, Instagram, MapPin, Phone, MessageSquare, Star } from 'lucide-react';
 import { BusinessMapAndReviews } from '@/components/BusinessMapAndReviews';
+
+type OpeningHoursValue = {
+  open: string;
+  close: string;
+  closed: boolean;
+};
 
 interface Business {
   id: string;
@@ -26,7 +32,7 @@ interface Business {
   zip_code: string | null;
   latitude: number | null;
   longitude: number | null;
-  opening_hours: Record<string, string> | null;
+  opening_hours: Record<string, OpeningHoursValue> | null;
   delivery: boolean;
   rating: number | null;
   total_reviews: number | null;
@@ -61,7 +67,26 @@ function getValidImageUrl(url: string | null): string | null {
 
 async function getBusinessData(slug: string): Promise<BusinessData | null> {
   const cookieStore = await cookies();
-  const supabase = createServerComponentClient({ cookies: () => cookieStore } as any);
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll();
+        },
+        setAll(cookiesToSet) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) => {
+              cookieStore.set(name, value, options);
+            });
+          } catch {
+            // No-op em Server Components se set de cookies nao for permitido.
+          }
+        },
+      },
+    }
+  );
   
   const { data: business, error } = await supabase
     .from('businesses')
@@ -180,7 +205,7 @@ export default async function EmpresaPage({ params }: { params: Promise<{ slug: 
   const dayOrder = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday', 'segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado', 'domingo'];
 
   // Função para ordenar os horários
-  const getSortedHours = (hours: Record<string, any>) => {
+  const getSortedHours = (hours: Record<string, OpeningHoursValue>) => {
     return Object.entries(hours).sort(([dayA], [dayB]) => {
       const indexA = dayOrder.indexOf(dayA.toLowerCase());
       const indexB = dayOrder.indexOf(dayB.toLowerCase());
@@ -219,8 +244,7 @@ export default async function EmpresaPage({ params }: { params: Promise<{ slug: 
               <section className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
                 <h2 className="text-2xl font-bold text-slate-800 mb-6">Horários</h2>
                 <div className="space-y-3">
-                  {getSortedHours(business.opening_hours).map(([day, hours]: [string, any]) => {
-                    const schedule = hours as { open: string; close: string; closed: boolean }
+                  {getSortedHours(business.opening_hours).map(([day, schedule]) => {
                     const dayKey = day.toLowerCase();
                     return (
                       <div key={day} className="flex justify-between items-center py-3 border-b border-slate-100 last:border-0">

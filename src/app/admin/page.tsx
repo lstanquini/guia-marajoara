@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/contexts/auth-context'
 import { useAdmin } from '@/hooks/useAdmin'
+import { useToast } from '@/contexts/toast-context'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { Building2, CheckCircle, XCircle, Clock, Eye, Ban, Copy, Check, Info, MapPin, Phone, Mail, Globe, Instagram as InstagramIcon, MoreVertical, Edit, Settings, LogOut, ExternalLink, User, FileText } from 'lucide-react'
 import { AdminLayout } from '@/components/admin/AdminLayout'
@@ -66,6 +67,7 @@ export default function AdminPage() {
   const { isAdmin, loading: adminLoading } = useAdmin()
   const router = useRouter()
   const supabase = createClientComponentClient()
+  const toast = useToast()
 
   const [businesses, setBusinesses] = useState<Business[]>([])
   const [loading, setLoading] = useState(true)
@@ -85,6 +87,11 @@ export default function AdminPage() {
   const [businessToApprove, setBusinessToApprove] = useState<Business | null>(null)
   const [selectedPlan, setSelectedPlan] = useState<'basic' | 'premium'>('basic')
   const [approving, setApproving] = useState(false)
+
+  const getErrorMessage = (error: unknown, fallback: string) => {
+    if (error instanceof Error && error.message) return error.message
+    return fallback
+  }
 
   useEffect(() => {
     if (!isAdmin) return
@@ -126,7 +133,7 @@ export default function AdminPage() {
 
   const openApprovalModal = (business: Business) => {
   if (!business.responsible_email) {
-    alert(
+    toast.warning(
       'Esta empresa não tem email do responsável cadastrado.\n\n' +
       'Edite os dados da empresa e adicione o email do responsável antes de aprovar.'
     )
@@ -160,18 +167,14 @@ const approveBusiness = async () => {
       throw new Error('Erro ao atualizar plano')
     }
 
-    console.log('✅ Plano atualizado:', selectedPlan)
-
     // ✅ Pegar session
     const { data: { session }, error: sessionError } = await supabase.auth.getSession()
     
     if (sessionError || !session) {
-      alert('Sessão expirada. Faça login novamente.')
-      window.location.href = '/login'
+      toast.warning('Sessão expirada. Faça login novamente.')
+      router.push('/login')
       return
     }
-
-    console.log('🔑 Token obtido, enviando requisição...')
 
     // ✅ Aprovar empresa
     const response = await fetch('/api/admin/approve-business', {
@@ -200,8 +203,6 @@ const approveBusiness = async () => {
       throw new Error(data.error || 'Erro ao aprovar empresa')
     }
 
-    console.log('✅ Empresa aprovada com sucesso!')
-
     // Atualizar lista local
     setBusinesses(businesses.map(b =>
       b.id === businessToApprove.id ? { ...b, status: 'approved' as const, plan_type: selectedPlan } : b
@@ -212,9 +213,9 @@ const approveBusiness = async () => {
     setShowApprovalModal(false)
     setShowCredentialsModal(true)
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('❌ Erro ao aprovar empresa:', error)
-    alert(`Erro ao aprovar empresa: ${error.message}`)
+    toast.error(`Erro ao aprovar empresa: ${getErrorMessage(error, 'Erro desconhecido')}`)
   } finally {
     setApproving(false)
   }
@@ -238,10 +239,10 @@ const approveBusiness = async () => {
 
       setShowDetailsModal(false)
       setShowActionsMenu(null)
-      alert('Empresa rejeitada')
+      toast.success('Empresa rejeitada')
     } catch (error) {
       console.error('Erro:', error)
-      alert('Erro ao rejeitar empresa')
+      toast.error('Erro ao rejeitar empresa')
     }
   }
 
@@ -250,8 +251,6 @@ const approveBusiness = async () => {
     if (!confirmed) return
 
     try {
-      console.log('🔄 Desativando empresa:', businessId)
-
       // Primeiro, atualizar status da empresa para suspended (suspenso)
       const { error: businessError, data: businessData } = await supabase
         .from('businesses')
@@ -267,8 +266,6 @@ const approveBusiness = async () => {
         throw new Error(`Erro ao desativar empresa: ${businessError.message}`)
       }
 
-      console.log('✅ Empresa desativada:', businessData)
-
       // Depois, tentar desativar o partner (pode não existir ainda)
       const { error: partnerError, data: partnerData, count } = await supabase
         .from('partners')
@@ -280,7 +277,6 @@ const approveBusiness = async () => {
         console.warn('⚠️ Aviso ao desativar partner:', partnerError)
         // Não bloqueia o fluxo se partner não existir ou der erro
       } else {
-        console.log('✅ Partner desativado:', partnerData)
       }
 
       // Atualizar estado local
@@ -290,16 +286,16 @@ const approveBusiness = async () => {
 
       setShowActionsMenu(null)
       setShowDetailsModal(false)
-      alert('✅ Empresa desativada com sucesso!')
-    } catch (error: any) {
+      toast.success('Empresa desativada com sucesso!')
+    } catch (error: unknown) {
       console.error('❌ Erro completo ao desativar:', error)
-      alert(`❌ Erro ao desativar empresa: ${error.message || 'Erro desconhecido'}`)
+      toast.error(`Erro ao desativar empresa: ${getErrorMessage(error, 'Erro desconhecido')}`)
     }
   }
 
   const editAsAdmin = (businessId: string) => {
     localStorage.setItem('admin_viewing_business', businessId)
-    window.location.href = '/dashboard'
+    router.push('/dashboard')
   }
 
   const copyToClipboard = (text: string, field: string) => {
@@ -351,10 +347,10 @@ const approveBusiness = async () => {
       ))
 
       setShowEditPlanModal(false)
-      alert('Plano atualizado com sucesso!')
+      toast.success('Plano atualizado com sucesso!')
     } catch (error) {
       console.error('Erro ao salvar:', error)
-      alert('Erro ao atualizar plano')
+      toast.error('Erro ao atualizar plano')
     } finally {
       setSavingPlan(false)
     }

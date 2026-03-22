@@ -65,7 +65,6 @@ export default function EditarCupomPage({ params }: PageProps) {
           if (saved && !hasLoadedFromStorage.current) {
             const parsedData = JSON.parse(saved)
             setFormData(parsedData)
-            console.log('Dados restaurados do localStorage')
           } else {
             setFormData(dbData)
           }

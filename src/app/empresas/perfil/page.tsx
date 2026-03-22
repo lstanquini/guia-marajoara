@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { Loader2, Instagram, Globe, Phone, MapPin } from 'lucide-react';
+import { useToast } from '@/contexts/toast-context';
 
 interface Business {
   id: string;
@@ -25,6 +26,7 @@ interface Business {
 export default function EditProfilePage() {
   const router = useRouter();
   const supabase = createClientComponentClient();
+  const toast = useToast();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [business, setBusiness] = useState<Business | null>(null);
@@ -78,7 +80,7 @@ export default function EditProfilePage() {
         });
       } catch (error) {
         console.error('Erro ao carregar empresa:', error);
-        alert('Erro ao carregar dados da empresa');
+        toast.error('Erro ao carregar dados da empresa');
       } finally {
         setLoading(false);
       }
@@ -114,11 +116,11 @@ export default function EditProfilePage() {
 
       if (error) throw error;
 
-      alert('Perfil atualizado com sucesso!');
+      toast.success('Perfil atualizado com sucesso!');
       router.refresh();
     } catch (error) {
       console.error('Erro ao atualizar perfil:', error);
-      alert('Erro ao atualizar perfil');
+      toast.error('Erro ao atualizar perfil');
     } finally {
       setSaving(false);
     }

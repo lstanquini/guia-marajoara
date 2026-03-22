@@ -18,6 +18,7 @@ export interface BusinessSearchResult {
   category_sub: string | null
   logo_url: string | null
   banner_url: string | null
+  banner_mobile_url: string | null
   rating: number | null
   total_reviews: number | null
   plan_type: 'basic' | 'premium'
@@ -62,7 +63,7 @@ export async function searchBusinesses(
       .from('businesses')
       .select(`
         id, name, slug, description, category_main, category_sub,
-        logo_url, banner_url, rating, total_reviews, plan_type,
+        logo_url, banner_url, banner_mobile_url, rating, total_reviews, plan_type,
         address, neighborhood, city, whatsapp, delivery, opening_hours
       `)
       .eq('status', 'approved')

@@ -7,10 +7,6 @@ export async function sendEmail(
   subject: string,
   html: string
 ) {
-  console.log(`📧 Enviando email via ${emailConfig.provider}`)
-  console.log(`📤 De: ${emailConfig.from.name} <${emailConfig.from.email}>`)
-  console.log(`📥 Para: ${to}`)
-  
   if (emailConfig.provider === 'resend') {
     return sendEmailViaResend(to, subject, html)
   }

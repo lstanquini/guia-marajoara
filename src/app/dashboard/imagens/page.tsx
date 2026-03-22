@@ -157,8 +157,6 @@ export default function ImagensPage() {
         const fileExt = logoFile.name.split('.').pop()
         const fileName = `logos/${businessId}-${Date.now()}.${fileExt}`
 
-        console.log('Fazendo upload do logo:', fileName)
-
         const { error: uploadError } = await supabase.storage
           .from('business-images')
           .upload(fileName, logoFile, {
@@ -175,7 +173,6 @@ export default function ImagensPage() {
           .from('business-images')
           .getPublicUrl(fileName)
 
-        console.log('Logo URL pública:', publicUrl)
         newLogoUrl = publicUrl
       }
 
@@ -183,8 +180,6 @@ export default function ImagensPage() {
       if (bannerFile) {
         const fileExt = bannerFile.name.split('.').pop()
         const fileName = `banners/${businessId}-${Date.now()}.${fileExt}`
-
-        console.log('Fazendo upload do banner:', fileName)
 
         const { error: uploadError } = await supabase.storage
           .from('business-images')
@@ -202,7 +197,6 @@ export default function ImagensPage() {
           .from('business-images')
           .getPublicUrl(fileName)
 
-        console.log('Banner URL pública:', publicUrl)
         newBannerUrl = publicUrl
       }
 
@@ -210,8 +204,6 @@ export default function ImagensPage() {
       if (bannerMobileFile) {
         const fileExt = bannerMobileFile.name.split('.').pop()
         const fileName = `banners-mobile/${businessId}-${Date.now()}.${fileExt}`
-
-        console.log('Fazendo upload do banner mobile:', fileName)
 
         const { error: uploadError } = await supabase.storage
           .from('business-images')
@@ -229,17 +221,10 @@ export default function ImagensPage() {
           .from('business-images')
           .getPublicUrl(fileName)
 
-        console.log('Banner mobile URL pública:', publicUrl)
         newBannerMobileUrl = publicUrl
       }
 
       // Atualizar no banco
-      console.log('Atualizando no banco:', {
-        businessId,
-        logo_url: newLogoUrl || null,
-        banner_url: newBannerUrl || null,
-        banner_mobile_url: newBannerMobileUrl || null
-      })
 
       const { error } = await supabase
         .from('businesses')
@@ -255,8 +240,6 @@ export default function ImagensPage() {
         console.error('Erro ao atualizar no banco:', error)
         throw new Error(`Erro ao salvar no banco: ${error.message}`)
       }
-
-      console.log('Imagens salvas com sucesso!')
 
       // Atualizar os states com as novas URLs
       setLogoUrl(newLogoUrl)

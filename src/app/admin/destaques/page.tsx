@@ -11,6 +11,7 @@ import {
   AlertCircle, Search, X, Save
 } from 'lucide-react'
 import { AdminLayout } from '@/components/admin/AdminLayout'
+import { useToast } from '@/contexts/toast-context'
 
 interface Business {
   id: string
@@ -59,6 +60,7 @@ export default function AdminDestaquesPage() {
   const { isAdmin, loading: adminLoading } = useAdmin()
   const router = useRouter()
   const supabase = createClientComponentClient()
+  const toast = useToast()
 
   const [featuredBusinesses, setFeaturedBusinesses] = useState<FeaturedBusiness[]>([])
   const [availableBusinesses, setAvailableBusinesses] = useState<Business[]>([])
@@ -107,7 +109,7 @@ export default function AdminDestaquesPage() {
 
       const couponsByBusiness: Record<string, Coupon[]> = {}
       if (coupons && Array.isArray(coupons)) {
-        coupons.forEach((coupon: any) => {
+        coupons.forEach((coupon: Coupon) => {
           if (!couponsByBusiness[coupon.business_id]) {
             couponsByBusiness[coupon.business_id] = []
           }
@@ -149,7 +151,7 @@ export default function AdminDestaquesPage() {
       
     } catch (error) {
       console.error('Erro:', error)
-      alert('Erro ao carregar dados')
+      toast.error('Erro ao carregar dados')
     } finally {
       setLoading(false)
     }
@@ -193,7 +195,7 @@ export default function AdminDestaquesPage() {
 
   async function handleSave() {
     if (featuredBusinesses.filter(f => f.is_active).length >= 5 && !editingFeatured && formData.is_active) {
-      alert('Você já tem 5 destaques ativos. Desative ou remova um antes de adicionar outro.')
+      toast.warning('Você já tem 5 destaques ativos. Desative ou remova um antes de adicionar outro.')
       return
     }
 
@@ -218,21 +220,22 @@ export default function AdminDestaquesPage() {
           .eq('id', editingFeatured.id)
 
         if (error) throw error
-        alert('Destaque atualizado!')
+        toast.success('Destaque atualizado!')
       } else {
         const { error } = await supabase
           .from('featured_businesses')
           .insert(dataToSave)
 
         if (error) throw error
-        alert('Destaque adicionado!')
+        toast.success('Destaque adicionado!')
       }
 
       setShowConfigModal(false)
       await loadData()
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro ao salvar:', error)
-      alert(`Erro: ${error.message}`)
+      const message = error instanceof Error ? error.message : 'Erro inesperado'
+      toast.error(`Erro: ${message}`)
     } finally {
       setSaving(false)
     }
@@ -250,11 +253,11 @@ export default function AdminDestaquesPage() {
         .eq('id', featured.id)
 
       if (error) throw error
-      alert('Destaque removido!')
+      toast.success('Destaque removido!')
       await loadData()
     } catch (error) {
       console.error('Erro:', error)
-      alert('Erro ao remover')
+      toast.error('Erro ao remover')
     }
   }
 
@@ -269,7 +272,7 @@ export default function AdminDestaquesPage() {
       await loadData()
     } catch (error) {
       console.error('Erro:', error)
-      alert('Erro ao atualizar status')
+      toast.error('Erro ao atualizar status')
     }
   }
 

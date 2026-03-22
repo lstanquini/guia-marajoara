@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import Image from 'next/image';
 import { Loader2, Upload, X } from 'lucide-react';
+import { useToast } from '@/contexts/toast-context';
 
 interface Coupon {
   id: string;
@@ -25,6 +26,7 @@ export default function EditCouponForm({
 }) {
   const router = useRouter();
   const supabase = createClientComponentClient();
+  const toast = useToast();
   const [loading, setLoading] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState(coupon.image_url);
@@ -87,7 +89,7 @@ export default function EditCouponForm({
       router.refresh();
     } catch (error) {
       console.error('Erro ao atualizar cupom:', error);
-      alert('Erro ao atualizar cupom');
+      toast.error('Erro ao atualizar cupom');
     } finally {
       setLoading(false);
     }

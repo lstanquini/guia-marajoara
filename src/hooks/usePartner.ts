@@ -1,9 +1,9 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { useEffect, useMemo, useState } from 'react'
 import { useAuth } from '@/contexts/auth-context'
 import { useAdmin } from '@/hooks/useAdmin'
+import { createClient } from '@/lib/supabase'
 
 interface PartnerData {
   id: string
@@ -18,7 +18,7 @@ export function usePartner() {
   const { isAdmin, loading: adminLoading } = useAdmin()
   const [partner, setPartner] = useState<PartnerData | null>(null)
   const [loading, setLoading] = useState(true)
-  const supabase = createClientComponentClient()
+  const supabase = useMemo(() => createClient(), [])
 
   useEffect(() => {
     if (authLoading || adminLoading) return

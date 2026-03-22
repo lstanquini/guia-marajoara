@@ -28,30 +28,23 @@ export function GoogleMapSimple({ address, businessName, lat, lng }: GoogleMapSi
 
   // Carregar script do Google Maps
   useEffect(() => {
-    console.log('[GoogleMapSimple] Iniciando carregamento do mapa')
-    console.log('[GoogleMapSimple] API Key presente:', !!apiKey)
-
     if (!apiKey) {
-      console.log('[GoogleMapSimple] API Key não encontrada')
       setLoading(false)
       return
     }
 
     // Verificar se já está carregado
     if (window.google && window.google.maps) {
-      console.log('[GoogleMapSimple] Google Maps já carregado')
       setScriptLoaded(true)
       return
     }
 
     // Carregar script
-    console.log('[GoogleMapSimple] Criando script do Google Maps')
     const script = document.createElement('script')
     script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`
     script.async = true
     script.defer = true
     script.onload = () => {
-      console.log('[GoogleMapSimple] Script carregado com sucesso')
       setScriptLoaded(true)
     }
     script.onerror = (error) => {
@@ -69,16 +62,12 @@ export function GoogleMapSimple({ address, businessName, lat, lng }: GoogleMapSi
 
   // Obter coordenadas
   useEffect(() => {
-    console.log('[GoogleMapSimple] UseEffect coordenadas - scriptLoaded:', scriptLoaded)
-
     if (!scriptLoaded) {
-      console.log('[GoogleMapSimple] Script ainda não carregado, aguardando...')
       return
     }
 
     // Se já temos lat/lng, usar diretamente
     if (lat && lng) {
-      console.log('[GoogleMapSimple] Usando coordenadas diretas:', { lat, lng })
       setCoordinates({ lat, lng })
       setLoading(false)
       return
@@ -86,23 +75,18 @@ export function GoogleMapSimple({ address, businessName, lat, lng }: GoogleMapSi
 
     // Fazer geocoding do endereço
     if (!address) {
-      console.log('[GoogleMapSimple] Sem endereço para geocoding')
       setLoading(false)
       return
     }
 
-    console.log('[GoogleMapSimple] Iniciando geocoding para:', address)
     const geocoder = new window.google.maps.Geocoder()
     geocoder.geocode({ address }, (results: any, status: string) => {
-      console.log('[GoogleMapSimple] Resultado do geocoding:', status)
-
       if (status === 'OK' && results[0]) {
         const location = results[0].geometry.location
         const coords = {
           lat: location.lat(),
           lng: location.lng()
         }
-        console.log('[GoogleMapSimple] Coordenadas encontradas:', coords)
         setCoordinates(coords)
       } else {
         console.error('[GoogleMapSimple] Erro no geocoding:', status)
@@ -114,18 +98,9 @@ export function GoogleMapSimple({ address, businessName, lat, lng }: GoogleMapSi
 
   // Renderizar mapa
   useEffect(() => {
-    console.log('[GoogleMapSimple] UseEffect renderizar mapa:', {
-      scriptLoaded,
-      coordinates,
-      mapRefCurrent: !!mapRef.current
-    })
-
     if (!scriptLoaded || !coordinates || !mapRef.current) {
-      console.log('[GoogleMapSimple] Aguardando: script, coordenadas ou ref do mapa')
       return
     }
-
-    console.log('[GoogleMapSimple] Criando mapa com coordenadas:', coordinates)
 
     try {
       const map = new window.google.maps.Map(mapRef.current, {
@@ -138,15 +113,11 @@ export function GoogleMapSimple({ address, businessName, lat, lng }: GoogleMapSi
         fullscreenControl: true,
       })
 
-      console.log('[GoogleMapSimple] Mapa criado com sucesso')
-
       new window.google.maps.Marker({
         position: coordinates,
         map: map,
         title: businessName,
       })
-
-      console.log('[GoogleMapSimple] Marcador adicionado')
     } catch (error) {
       console.error('[GoogleMapSimple] Erro ao criar mapa:', error)
       setError('Erro ao renderizar mapa')

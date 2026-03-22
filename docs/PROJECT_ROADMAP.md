@@ -1,4 +1,6 @@
 # PROJECT_ROADMAP.md - PLANO MASTER DO PROJETO
+> STATUS: roadmap historico inicial do projeto.
+> Planejamento tecnico atual: `docs/PRODUCTION_SAFE_IMPROVEMENT_BACKLOG.md`.
 <!-- CRIADO: 14/09/2025 14:59 com Product Owner -->
 <!-- VERSÃO: 1.0 FINAL -->
 
